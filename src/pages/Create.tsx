@@ -130,8 +130,8 @@ const Create = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 pt-4 px-4">
-      <h1 className="text-2xl font-bold mb-4">Create Post</h1>
+    <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
+      <h1 className="text-2xl font-bold mb-4 text-foreground">Create Post</h1>
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate")}>
         <TabsList className="w-full mb-4">
