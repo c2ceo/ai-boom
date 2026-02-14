@@ -77,9 +77,11 @@ const Profile = () => {
     if (isFollowing) {
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
       setIsFollowing(false);
+      setProfile((prev: any) => prev ? { ...prev, followers_count: Math.max(0, (prev.followers_count || 0) - 1) } : prev);
     } else {
       await supabase.from("follows").insert({ follower_id: user.id, following_id: targetUserId });
       setIsFollowing(true);
+      setProfile((prev: any) => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : prev);
     }
   };
 
