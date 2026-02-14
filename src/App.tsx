@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
 import PostView from "./pages/PostView";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { Sparkles } from "lucide-react";
 
@@ -59,6 +60,7 @@ const AppRoutes = () => {
       <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
       <Route path="/profile/:userId" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
       <Route path="/post/:postId" element={<ProtectedRoute><AppLayout><PostView /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
