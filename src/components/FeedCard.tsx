@@ -27,7 +27,7 @@ interface FeedCardProps {
   };
   isLiked?: boolean;
   onLikeToggle?: () => void;
-  onComment?: () => void;
+  onComment?: (postId: string) => void;
 }
 
 const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: FeedCardProps) => {
@@ -158,7 +158,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: F
                 />
                 <span className="text-xs text-foreground">{likesCount}</span>
               </button>
-              <button onClick={onComment} className="flex flex-col items-center gap-1">
+              <button onClick={() => onComment?.(post.id)} className="flex flex-col items-center gap-1">
                 <MessageCircle className="h-7 w-7 text-foreground" />
                 <span className="text-xs text-foreground">{post.comments_count}</span>
               </button>
