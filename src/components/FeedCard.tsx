@@ -1,22 +1,11 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, Flag, Verified, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Flag, Verified } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface FeedCardProps {
   post: {
@@ -39,10 +28,9 @@ interface FeedCardProps {
   isLiked?: boolean;
   onLikeToggle?: () => void;
   onComment?: () => void;
-  onDelete?: () => void;
 }
 
-const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete }: FeedCardProps) => {
+const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: FeedCardProps) => {
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
@@ -82,19 +70,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
     toast({ title: "Link copied!" });
   };
-
-  const handleDelete = async () => {
-    try {
-      const { error } = await supabase.from("posts").delete().eq("id", post.id);
-      if (error) throw error;
-      toast({ title: "Post deleted" });
-      onDelete?.();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    }
-  };
-
-  const isOwner = user?.id === post.user_id;
 
   return (
     <div className="relative h-[calc(100vh-4rem)] w-full snap-start flex items-center justify-center bg-background">
@@ -190,25 +165,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               <button onClick={handleShare} className="flex flex-col items-center gap-1">
                 <Share2 className="h-6 w-6 text-foreground" />
               </button>
-              {isOwner && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button className="flex flex-col items-center gap-1">
-                      <Trash2 className="h-6 w-6 text-destructive" />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete post?</AlertDialogTitle>
-                      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
             </div>
           </div>
         </div>

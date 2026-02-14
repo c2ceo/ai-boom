@@ -95,7 +95,6 @@ const Home = () => {
           post={post}
           profile={post.profile}
           isLiked={likedPosts.has(post.id)}
-          onDelete={() => setPosts((prev) => prev.filter((p) => p.id !== post.id))}
         />
       ))}
     </div>
