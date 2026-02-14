@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import FeedCard from "@/components/FeedCard";
+import CommentSheet from "@/components/CommentSheet";
 
 const PostView = () => {
   const { postId } = useParams();
@@ -22,6 +23,7 @@ const PostView = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [commentOpen, setCommentOpen] = useState(false);
 
   useEffect(() => {
     if (postId) fetchPost();
@@ -138,8 +140,14 @@ const PostView = () => {
           profile={profile || undefined}
           isLiked={isLiked}
           onLikeToggle={fetchPost}
+          onComment={() => setCommentOpen(true)}
         />
       </div>
+      <CommentSheet
+        postId={post.id}
+        open={commentOpen}
+        onOpenChange={setCommentOpen}
+      />
     </div>
   );
 };

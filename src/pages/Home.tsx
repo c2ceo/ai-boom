@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
+import CommentSheet from "@/components/CommentSheet";
 import { Sparkles } from "lucide-react";
 
 type PostWithProfile = {
@@ -26,6 +27,7 @@ const Home = () => {
   const [posts, setPosts] = useState<PostWithProfile[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -95,8 +97,16 @@ const Home = () => {
           post={post}
           profile={post.profile}
           isLiked={likedPosts.has(post.id)}
+          onComment={(postId) => setCommentPostId(postId)}
         />
       ))}
+      {commentPostId && (
+        <CommentSheet
+          postId={commentPostId}
+          open={!!commentPostId}
+          onOpenChange={(open) => !open && setCommentPostId(null)}
+        />
+      )}
     </div>
   );
 };
