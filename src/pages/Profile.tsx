@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import FollowListSheet from "@/components/FollowListSheet";
 
 const Profile = () => {
   const { userId } = useParams();
@@ -31,6 +32,8 @@ const Profile = () => {
   const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
+  const [showFollowList, setShowFollowList] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -152,14 +155,14 @@ const Profile = () => {
             <div className="font-bold">{profile?.posts_count || posts.length}</div>
             <div className="text-xs text-muted-foreground">Posts</div>
           </div>
-          <div>
+          <button onClick={() => { setFollowListType("followers"); setShowFollowList(true); }}>
             <div className="font-bold">{profile?.followers_count || 0}</div>
             <div className="text-xs text-muted-foreground">Followers</div>
-          </div>
-          <div>
+          </button>
+          <button onClick={() => { setFollowListType("following"); setShowFollowList(true); }}>
             <div className="font-bold">{profile?.following_count || 0}</div>
             <div className="text-xs text-muted-foreground">Following</div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -293,6 +296,15 @@ const Profile = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {targetUserId && (
+        <FollowListSheet
+          open={showFollowList}
+          onOpenChange={setShowFollowList}
+          userId={targetUserId}
+          type={followListType}
+        />
+      )}
     </div>
   );
 };
