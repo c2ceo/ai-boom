@@ -161,10 +161,13 @@ const Create = () => {
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center gap-3 cursor-pointer py-8">
-                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Tap to upload AI content</span>
-                  <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
+                  <label className="flex flex-col items-center gap-3 cursor-pointer py-8">
+                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                   <div className="text-center">
+                     <span className="text-sm text-muted-foreground">Tap to upload AI content</span>
+                     <span className="text-xs text-muted-foreground/70">(Max 50MB)</span>
+                   </div>
+                   <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
                 </label>
               )}
             </CardContent>
