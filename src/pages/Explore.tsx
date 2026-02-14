@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const categories = ["All", "AI Art", "AI Photography", "AI Video", "AI Abstract"];
@@ -86,7 +86,19 @@ const Explore = () => {
               className="aspect-square cursor-pointer overflow-hidden"
               onClick={() => navigate(`/post/${post.id}`)}
             >
-              {post.image_url ? (
+              {post.video_url ? (
+                <div className="relative h-full w-full">
+                  <video
+                    src={post.video_url}
+                    className="h-full w-full object-cover hover:scale-105 transition-transform"
+                    muted
+                    preload="metadata"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <Play className="h-6 w-6 text-white/80 drop-shadow-lg" fill="white" fillOpacity={0.8} />
+                  </div>
+                </div>
+              ) : post.image_url ? (
                 <img
                   src={post.image_url}
                   alt={post.caption || "AI content"}
