@@ -106,7 +106,7 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 pt-4 px-4">
+    <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
