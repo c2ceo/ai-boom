@@ -176,13 +176,22 @@ const Profile = () => {
             Edit Profile
           </Button>
         ) : (
-          <Button
-            variant={isFollowing ? "secondary" : "default"}
-            className="w-full"
-            onClick={handleFollow}
-          >
-            {isFollowing ? "Following" : "Follow"}
-          </Button>
+          <div className="flex gap-2">
+            {isFollowing ? (
+              <>
+                <Button variant="secondary" className="flex-1" disabled>
+                  Following
+                </Button>
+                <Button variant="secondary" size="icon" onClick={handleFollow}>
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Button className="flex-1" onClick={handleFollow}>
+                Follow
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
