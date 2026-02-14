@@ -4,7 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, LogOut, Play, Trash2, X, CheckCircle } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, LogOut, Play, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +89,40 @@ const Profile = () => {
       setIsFollowing(true);
       setProfile((prev: any) => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : prev);
     }
+  };
+
+  const handleBlock = async () => {
+    if (!user || !targetUserId) return;
+    // Unfollow if following
+    if (isFollowing) {
+      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
+      setIsFollowing(false);
+      setProfile((prev: any) => prev ? { ...prev, followers_count: Math.max(0, (prev.followers_count || 0) - 1) } : prev);
+    }
+    // Remove them following you
+    await supabase.from("follows").delete().eq("follower_id", targetUserId).eq("following_id", user.id);
+    toast({ title: "User blocked" });
+    navigate("/");
+  };
+
+  const handleReport = async () => {
+    if (!user || !targetUserId) return;
+    // Create a report for the user's latest post or a generic report
+    const { data: latestPost } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("user_id", targetUserId)
+      .limit(1)
+      .maybeSingle();
+
+    if (latestPost) {
+      await supabase.from("reports").insert({
+        reporter_id: user.id,
+        post_id: latestPost.id,
+        reason: "Account reported by user",
+      });
+    }
+    toast({ title: "Account reported", description: "We'll review this account." });
   };
 
   const handleSignOut = async () => {
@@ -183,19 +223,34 @@ const Profile = () => {
         ) : (
           <div className="flex gap-2">
             {isFollowing ? (
-              <>
-                <Button variant="secondary" className="flex-1" disabled>
-                  Following
-                </Button>
-                <Button variant="secondary" size="icon" onClick={handleFollow}>
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </>
+              <Button variant="secondary" className="flex-1" disabled>
+                Following
+              </Button>
             ) : (
               <Button className="flex-1" onClick={handleFollow}>
                 Follow
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover border-border z-50">
+                {isFollowing && (
+                  <DropdownMenuItem onClick={handleFollow} className="gap-2">
+                    <UserX className="h-4 w-4" /> Unfollow
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={handleBlock} className="gap-2 text-destructive focus:text-destructive">
+                  <Ban className="h-4 w-4" /> Block
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleReport} className="gap-2 text-destructive focus:text-destructive">
+                  <Flag className="h-4 w-4" /> Report Account
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>
