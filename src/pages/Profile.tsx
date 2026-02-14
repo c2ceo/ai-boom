@@ -80,7 +80,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 text-foreground">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">@{profile?.username || "user"}</h2>
