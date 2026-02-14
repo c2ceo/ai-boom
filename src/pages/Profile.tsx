@@ -48,6 +48,37 @@ const Profile = () => {
     if (targetUserId) fetchProfile();
   }, [targetUserId]);
 
+  // Realtime subscription for profile count updates
+  useEffect(() => {
+    if (!targetUserId) return;
+
+    const channel = supabase
+      .channel(`profile-${targetUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${targetUserId}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setProfile((prev: any) => prev ? {
+            ...prev,
+            followers_count: updated.followers_count,
+            following_count: updated.following_count,
+            posts_count: updated.posts_count,
+          } : prev);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [targetUserId]);
+
   const fetchProfile = async () => {
     const { data: profileData } = await supabase
       .from("profiles")
