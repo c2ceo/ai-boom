@@ -92,7 +92,7 @@ const Create = () => {
 
     setLoading(true);
     try {
-      let imageUrl = generatedImage;
+      let uploadedUrl = generatedImage;
 
       if (mode === "upload" && file) {
         const ext = file.name.split(".").pop();
@@ -102,12 +102,15 @@ const Create = () => {
           .upload(path, file);
         if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        imageUrl = publicUrl;
+        uploadedUrl = publicUrl;
       }
+
+      const isVideo = file?.type?.startsWith("video/");
 
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
-        image_url: imageUrl,
+        image_url: isVideo ? null : uploadedUrl,
+        video_url: isVideo ? uploadedUrl : null,
         caption,
         tags,
         category,
@@ -144,8 +147,12 @@ const Create = () => {
           <Card className="border-dashed border-2 border-border/50 bg-card/50 mb-4">
             <CardContent className="p-6">
               {preview ? (
-                <div className="relative">
-                  <img src={preview} alt="Preview" className="w-full rounded-lg max-h-80 object-cover" />
+              <div className="relative">
+                  {file?.type?.startsWith("video/") ? (
+                    <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
+                  ) : (
+                    <img src={preview} alt="Preview" className="w-full rounded-lg max-h-80 object-cover" />
+                  )}
                   <button
                     onClick={() => { setFile(null); setPreview(null); }}
                     className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
