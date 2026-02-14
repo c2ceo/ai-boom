@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,16 @@ const Auth = () => {
         await signIn(email, password);
         navigate("/");
       } else {
-        await signUp(email, password, username);
+        // Check for duplicate username
+        const { data: existing } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", username.trim())
+          .maybeSingle();
+        if (existing) {
+          throw new Error("Username is already taken. Please choose another.");
+        }
+        await signUp(email, password, username.trim());
         toast({
           title: "Account created!",
           description: "Check your email to verify your account.",

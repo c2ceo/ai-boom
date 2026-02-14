@@ -92,9 +92,25 @@ const EditProfile = () => {
   const handleSave = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Check for duplicate username
+    const trimmedUsername = username.trim();
+    if (trimmedUsername) {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id, user_id")
+        .eq("username", trimmedUsername)
+        .maybeSingle();
+      if (existing && existing.user_id !== user.id) {
+        toast({ title: "Username taken", description: "Please choose a different username.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("profiles")
-      .update({ username, display_name: displayName, bio, avatar_url: avatarUrl })
+      .update({ username: trimmedUsername, display_name: displayName, bio, avatar_url: avatarUrl })
       .eq("user_id", user.id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
