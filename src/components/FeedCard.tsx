@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Flag, Verified } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ interface FeedCardProps {
 }
 
 const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: FeedCardProps) => {
+  const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
@@ -139,9 +141,12 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: F
                     {(profile?.username || "?")[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-sm text-foreground">
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
+                  className="font-semibold text-sm text-foreground hover:underline"
+                >
                   @{profile?.username || "unknown"}
-                </span>
+                </button>
               </div>
               {post.caption && (
                 <p className="text-sm text-foreground/80 line-clamp-2">{post.caption}</p>
