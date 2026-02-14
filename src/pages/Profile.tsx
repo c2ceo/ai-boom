@@ -84,10 +84,23 @@ const Profile = () => {
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
       setIsFollowing(false);
       setProfile((prev: any) => prev ? { ...prev, followers_count: Math.max(0, (prev.followers_count || 0) - 1) } : prev);
+      // Update DB counts
+      await supabase.rpc("increment_count", { table_name: "profiles", column_name: "followers_count", row_id: profile?.id, amount: -1 });
+      // Update own following_count
+      const { data: ownProfile } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+      if (ownProfile) {
+        await supabase.rpc("increment_count", { table_name: "profiles", column_name: "following_count", row_id: ownProfile.id, amount: -1 });
+      }
     } else {
       await supabase.from("follows").insert({ follower_id: user.id, following_id: targetUserId });
       setIsFollowing(true);
       setProfile((prev: any) => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : prev);
+      // Update DB counts
+      await supabase.rpc("increment_count", { table_name: "profiles", column_name: "followers_count", row_id: profile?.id, amount: 1 });
+      const { data: ownProfile } = await supabase.from("profiles").select("id").eq("user_id", user.id).single();
+      if (ownProfile) {
+        await supabase.rpc("increment_count", { table_name: "profiles", column_name: "following_count", row_id: ownProfile.id, amount: 1 });
+      }
     }
   };
 
