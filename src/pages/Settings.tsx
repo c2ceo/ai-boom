@@ -16,7 +16,7 @@ const Settings = () => {
     { icon: User, label: "Edit Profile", onClick: () => navigate("/edit-profile") },
     { icon: Bell, label: "Notifications", onClick: () => navigate("/notifications") },
     { icon: Shield, label: "Privacy", onClick: () => {} },
-    { icon: HelpCircle, label: "Help & Support", onClick: () => {} },
+    { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
   ];
 
   return (
