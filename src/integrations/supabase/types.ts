@@ -211,6 +211,7 @@ export type Database = {
           followers_count: number
           following_count: number
           id: string
+          is_private: boolean
           posts_count: number
           updated_at: string
           user_id: string
@@ -224,6 +225,7 @@ export type Database = {
           followers_count?: number
           following_count?: number
           id?: string
+          is_private?: boolean
           posts_count?: number
           updated_at?: string
           user_id: string
@@ -237,6 +239,7 @@ export type Database = {
           followers_count?: number
           following_count?: number
           id?: string
+          is_private?: boolean
           posts_count?: number
           updated_at?: string
           user_id?: string
