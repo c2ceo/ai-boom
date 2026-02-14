@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, LogOut } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, LogOut, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -169,6 +169,18 @@ const Profile = () => {
                     className="h-full w-full object-cover hover:opacity-80 transition-opacity"
                     loading="lazy"
                   />
+                ) : post.video_url ? (
+                  <div className="relative h-full w-full">
+                    <video
+                      src={post.video_url}
+                      className="h-full w-full object-cover"
+                      muted
+                      preload="metadata"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <Play className="h-6 w-6 text-white fill-white" />
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-muted">
                     <Sparkles className="h-5 w-5 text-muted-foreground" />
