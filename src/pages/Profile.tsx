@@ -4,7 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, LogOut, Play } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, LogOut, Play, Trash2, X, CheckCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +27,10 @@ const Profile = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -69,6 +83,34 @@ const Profile = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const toggleSelectPost = (postId: string) => {
+    setSelectedPosts((prev) => {
+      const next = new Set(prev);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedPosts.size === 0) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .in("id", Array.from(selectedPosts));
+    if (error) {
+      toast({ title: "Error deleting posts", description: error.message, variant: "destructive" });
+    } else {
+      setPosts((prev) => prev.filter((p) => !selectedPosts.has(p.id)));
+      toast({ title: `Deleted ${selectedPosts.size} post${selectedPosts.size > 1 ? "s" : ""}` });
+      setSelectedPosts(new Set());
+      setSelectMode(false);
+    }
+    setDeleting(false);
+    setShowDeleteDialog(false);
   };
 
   if (loading) {
@@ -146,8 +188,36 @@ const Profile = () => {
 
       {/* Posts grid */}
       <div className="border-t border-border/50">
-        <div className="flex items-center justify-center py-2">
+        <div className="flex items-center justify-between px-4 py-2">
           <Grid3X3 className="h-5 w-5 text-foreground" />
+          {isOwnProfile && posts.length > 0 && (
+            selectMode ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{selectedPosts.size} selected</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={selectedPosts.size === 0}
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="gap-1"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setSelectMode(false); setSelectedPosts(new Set()); }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => setSelectMode(true)} className="text-xs">
+                Select
+              </Button>
+            )
+          )}
         </div>
         {posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-6">
@@ -159,8 +229,8 @@ const Profile = () => {
             {posts.map((post) => (
               <div
                 key={post.id}
-                className="aspect-square cursor-pointer overflow-hidden"
-                onClick={() => navigate(`/post/${post.id}`)}
+                className="aspect-square cursor-pointer overflow-hidden relative"
+                onClick={() => selectMode ? toggleSelectPost(post.id) : navigate(`/post/${post.id}`)}
               >
                 {post.image_url ? (
                   <img
@@ -186,11 +256,34 @@ const Profile = () => {
                     <Sparkles className="h-5 w-5 text-muted-foreground" />
                   </div>
                 )}
+                {selectMode && (
+                  <div className={`absolute inset-0 flex items-center justify-center transition-colors ${selectedPosts.has(post.id) ? "bg-primary/30" : "bg-black/10"}`}>
+                    <CheckCircle className={`h-6 w-6 ${selectedPosts.has(post.id) ? "text-primary" : "text-white/50"}`} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedPosts.size} post{selectedPosts.size > 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The selected posts will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSelected} disabled={deleting} className="bg-destructive text-destructive-foreground">
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
