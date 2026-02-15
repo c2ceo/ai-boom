@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Flag, Verified } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +38,26 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: F
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLikesCount(post.likes_count);
+  }, [post.likes_count]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`post-likes-${post.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "posts", filter: `id=eq.${post.id}` },
+        (payload) => {
+          if (payload.new && typeof (payload.new as any).likes_count === "number") {
+            setLikesCount((payload.new as any).likes_count);
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [post.id]);
 
   const handleDoubleTap = async () => {
     if (!user) return;
