@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
 import { Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type PostWithProfile = {
   id: string;
@@ -29,6 +31,26 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleDelete = async (postId: string) => {
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      toast({ title: "Post deleted" });
+    }
+  };
+
+  const handleEdit = (postId: string) => {
+    navigate(`/post/${postId}`);
+  };
+
+  const handleArchive = () => {
+    toast({ title: "Archived", description: "Post archived (coming soon)" });
+  };
 
   useEffect(() => {
     fetchPosts();
@@ -98,6 +120,9 @@ const Home = () => {
           profile={post.profile}
           isLiked={likedPosts.has(post.id)}
           onComment={(postId) => setCommentPostId(postId)}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          onArchive={() => handleArchive()}
         />
       ))}
       {commentPostId && (

@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Flag, Verified } from "lucide-react";
+import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FeedCardProps {
   post: {
@@ -29,15 +35,19 @@ interface FeedCardProps {
   isLiked?: boolean;
   onLikeToggle?: () => void;
   onComment?: (postId: string) => void;
+  onDelete?: (postId: string) => void;
+  onEdit?: (postId: string) => void;
+  onArchive?: (postId: string) => void;
 }
 
-const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: FeedCardProps) => {
+const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive }: FeedCardProps) => {
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const { user } = useAuth();
   const { toast } = useToast();
+  const isOwner = user?.id === post.user_id;
 
   useEffect(() => {
     setLikesCount(post.likes_count);
@@ -190,6 +200,29 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment }: F
               <button onClick={handleShare} className="flex flex-col items-center gap-1">
                 <Share2 className="h-6 w-6 text-foreground" />
               </button>
+              {isOwner && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex flex-col items-center gap-1">
+                      <MoreVertical className="h-6 w-6 text-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-popover z-50">
+                    <DropdownMenuItem onClick={() => onEdit?.(post.id)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onArchive?.(post.id)}>
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDelete?.(post.id)} className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </div>
