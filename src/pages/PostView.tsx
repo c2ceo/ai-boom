@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Sparkles, MoreHorizontal, Trash2, Archive, Repeat2 } from "lucide-react";
+import { ArrowLeft, Sparkles, MoreHorizontal, Trash2, Archive, Repeat2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +10,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
@@ -24,6 +34,10 @@ const PostView = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [commentOpen, setCommentOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editCaption, setEditCaption] = useState("");
+  const [editTags, setEditTags] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (postId) fetchPost();
@@ -82,6 +96,32 @@ const PostView = () => {
     toast({ title: "Link copied!", description: "Share it to repost" });
   };
 
+  const openEdit = () => {
+    setEditCaption(post.caption || "");
+    setEditTags((post.tags || []).join(", "));
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setSaving(true);
+    const tagsArray = editTags
+      .split(",")
+      .map((t: string) => t.trim())
+      .filter(Boolean);
+    const { error } = await supabase
+      .from("posts")
+      .update({ caption: editCaption, tags: tagsArray })
+      .eq("id", post.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Post updated!" });
+      setEditOpen(false);
+      fetchPost();
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -126,6 +166,12 @@ const PostView = () => {
               Archive
             </DropdownMenuItem>
             {isOwner && (
+              <DropdownMenuItem onClick={openEdit}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {isOwner && (
               <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -148,6 +194,40 @@ const PostView = () => {
         open={commentOpen}
         onOpenChange={setCommentOpen}
       />
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Post</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-caption">Caption</Label>
+              <Textarea
+                id="edit-caption"
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                placeholder="Write a caption..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
+              <Input
+                id="edit-tags"
+                value={editTags}
+                onChange={(e) => setEditTags(e.target.value)}
+                placeholder="ai, art, midjourney"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
