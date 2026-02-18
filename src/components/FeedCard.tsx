@@ -45,24 +45,26 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
 
   useEffect(() => {
     setLikesCount(post.likes_count);
-  }, [post.likes_count]);
+    setCommentsCount(post.comments_count);
+  }, [post.likes_count, post.comments_count]);
 
   useEffect(() => {
     const channel = supabase
-      .channel(`post-likes-${post.id}`)
+      .channel(`post-counts-${post.id}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "posts", filter: `id=eq.${post.id}` },
         (payload) => {
-          if (payload.new && typeof (payload.new as any).likes_count === "number") {
-            setLikesCount((payload.new as any).likes_count);
-          }
+          const p = payload.new as any;
+          if (typeof p.likes_count === "number") setLikesCount(p.likes_count);
+          if (typeof p.comments_count === "number") setCommentsCount(p.comments_count);
         }
       )
       .subscribe();
@@ -77,6 +79,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
       await supabase.from("likes").insert({ user_id: user.id, post_id: post.id });
+      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: 1 });
       onLikeToggle?.();
     } else {
       setShowHeart(true);
@@ -90,10 +93,12 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       setLiked(false);
       setLikesCount((c) => c - 1);
       await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", post.id);
+      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: -1 });
     } else {
       setLiked(true);
       setLikesCount((c) => c + 1);
       await supabase.from("likes").insert({ user_id: user.id, post_id: post.id });
+      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: 1 });
     }
     onLikeToggle?.();
   };
@@ -195,7 +200,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               </button>
               <button onClick={() => onComment?.(post.id)} className="flex flex-col items-center gap-1">
                 <MessageCircle className="h-7 w-7 text-foreground" />
-                <span className="text-xs text-foreground">{post.comments_count}</span>
+                <span className="text-xs text-foreground">{commentsCount}</span>
               </button>
               <button onClick={handleShare} className="flex flex-col items-center gap-1">
                 <Share2 className="h-6 w-6 text-foreground" />
