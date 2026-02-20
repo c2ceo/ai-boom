@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ const CommunityVote = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [timeLeftMap, setTimeLeftMap] = useState<Record<string, string>>({});
 
   // Resolve expired votes on page load
   useQuery({
@@ -24,18 +25,32 @@ const CommunityVote = () => {
     staleTime: 60000,
   });
 
+  // Fetch posts separately, then profiles
   const { data: posts, isLoading } = useQuery({
     queryKey: ["pending-votes"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: postsData, error } = await supabase
         .from("posts")
-        .select("*, profiles!inner(username, display_name, avatar_url)")
-        .eq("status", "pending_review")
-        .gt("voting_expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false }) as any;
+        .select("*")
+        .eq("status" as any, "pending_review")
+        .gt("voting_expires_at" as any, new Date().toISOString())
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      if (!postsData?.length) return [];
+
+      // Fetch profiles for these posts
+      const userIds = [...new Set(postsData.map((p) => p.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", userIds);
+
+      const profileMap: Record<string, any> = {};
+      profiles?.forEach((p) => { profileMap[p.user_id] = p; });
+
+      return postsData.map((p) => ({ ...p, profile: profileMap[p.user_id] || null }));
     },
+    refetchInterval: 5000,
   });
 
   const { data: myVotes } = useQuery({
@@ -54,7 +69,7 @@ const CommunityVote = () => {
   });
 
   const { data: voteCounts } = useQuery({
-    queryKey: ["vote-counts"],
+    queryKey: ["vote-counts", posts?.map((p: any) => p.id).join(",")],
     queryFn: async () => {
       if (!posts?.length) return {};
       const ids = posts.map((p: any) => p.id);
@@ -71,6 +86,41 @@ const CommunityVote = () => {
     },
     enabled: !!posts?.length,
   });
+
+  // Realtime subscription for instant vote updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("post-votes-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_votes" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["vote-counts"] });
+        queryClient.invalidateQueries({ queryKey: ["my-votes"] });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
+  // Live countdown timer
+  const getTimeLeft = useCallback((expiresAt: string) => {
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hours}h ${mins}m ${secs}s`;
+  }, []);
+
+  useEffect(() => {
+    if (!posts?.length) return;
+    const interval = setInterval(() => {
+      const map: Record<string, string> = {};
+      posts.forEach((p: any) => {
+        if (p.voting_expires_at) map[p.id] = getTimeLeft(p.voting_expires_at);
+      });
+      setTimeLeftMap(map);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [posts, getTimeLeft]);
 
   const voteMutation = useMutation({
     mutationFn: async ({ postId, voteAi }: { postId: string; voteAi: boolean }) => {
@@ -94,14 +144,6 @@ const CommunityVote = () => {
       toast({ title: "Vote failed", description: err.message, variant: "destructive" });
     },
   });
-
-  const getTimeLeft = (expiresAt: string) => {
-    const diff = new Date(expiresAt).getTime() - Date.now();
-    if (diff <= 0) return "Expired";
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${mins}m left`;
-  };
 
   return (
     <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
@@ -145,7 +187,7 @@ const CommunityVote = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">
-                        @{post.profiles?.username || "unknown"}
+                        @{post.profile?.username || "unknown"}
                       </span>
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Sparkles className="h-3 w-3" />
@@ -154,7 +196,7 @@ const CommunityVote = () => {
                     </div>
                     <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      {getTimeLeft(post.voting_expires_at)}
+                      {timeLeftMap[post.id] || getTimeLeft(post.voting_expires_at)}
                     </Badge>
                   </div>
 
@@ -171,11 +213,11 @@ const CommunityVote = () => {
                       </div>
                       <div className="h-2 rounded-full bg-muted overflow-hidden flex">
                         <div
-                          className="h-full bg-primary transition-all"
+                          className="h-full bg-primary transition-all duration-300"
                           style={{ width: `${aiPercent}%` }}
                         />
                         <div
-                          className="h-full bg-accent transition-all"
+                          className="h-full bg-accent transition-all duration-300"
                           style={{ width: `${100 - aiPercent}%` }}
                         />
                       </div>
