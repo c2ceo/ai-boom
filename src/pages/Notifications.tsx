@@ -87,7 +87,7 @@ const Notifications = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">
+                  <p className="text-sm text-foreground">
                     <span className="font-semibold">@{actor?.username || "someone"}</span>{" "}
                     {notif.type === "like" && "liked your post"}
                     {notif.type === "comment" && "commented on your post"}
