@@ -60,6 +60,7 @@ const Home = () => {
     const { data: postsData } = await supabase
       .from("posts")
       .select("*")
+      .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(50);
 
