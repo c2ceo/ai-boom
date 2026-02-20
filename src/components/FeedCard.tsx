@@ -124,13 +124,13 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className="snap-start w-full flex flex-col bg-background">
       {/* Media */}
       <div
-        className="relative w-full max-w-lg mx-auto aspect-square cursor-pointer"
+        className={`relative w-full max-w-lg mx-auto cursor-pointer ${post.video_url ? "" : "aspect-square"}`}
         onDoubleClick={handleDoubleTap}
       >
         {post.video_url ? (
           <video
             src={post.video_url}
-            className="h-full w-full object-cover"
+            className="w-full object-contain"
             loop
             muted
             autoPlay
