@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-filter]
 verify_jwt = false
+
+[functions.resolve-votes]
+verify_jwt = false
