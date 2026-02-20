@@ -159,8 +159,12 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           <Badge variant="secondary" className="bg-secondary/80 backdrop-blur-sm text-xs">
             {post.ai_tool}
           </Badge>
-          {post.is_verified_ai && (
+          {post.is_verified_ai ? (
             <Verified className="h-4 w-4 text-primary" />
+          ) : (
+            <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/30 backdrop-blur-sm text-[10px]">
+              Unverified
+            </Badge>
           )}
         </div>
 
