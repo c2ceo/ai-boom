@@ -129,6 +129,7 @@ const Create = () => {
         }
       }
 
+      const needsReview = !verifiedAi && mode === "upload" && !isVideo;
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         image_url: isVideo ? null : uploadedUrl,
@@ -138,7 +139,9 @@ const Create = () => {
         category,
         ai_tool: mode === "generate" ? "in-app" : aiTool,
         is_verified_ai: verifiedAi,
-      });
+        status: needsReview ? "pending_review" : "approved",
+        voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+      } as any);
 
       if (error) throw error;
 

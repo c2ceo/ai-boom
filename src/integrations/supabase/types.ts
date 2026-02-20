@@ -154,6 +154,38 @@ export type Database = {
           },
         ]
       }
+      post_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          vote_ai: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          vote_ai: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          vote_ai?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           ai_tool: string
@@ -170,6 +202,7 @@ export type Database = {
           updated_at: string
           user_id: string
           video_url: string | null
+          voting_expires_at: string | null
         }
         Insert: {
           ai_tool?: string
@@ -186,6 +219,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           video_url?: string | null
+          voting_expires_at?: string | null
         }
         Update: {
           ai_tool?: string
@@ -202,6 +236,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           video_url?: string | null
+          voting_expires_at?: string | null
         }
         Relationships: []
       }
