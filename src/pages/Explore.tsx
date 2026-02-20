@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles, Play } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BombThumbnail from "@/components/BombThumbnail";
 
 const categories = ["All", "AI Art", "AI Photography", "AI Video", "AI Abstract"];
 
@@ -79,38 +80,15 @@ const Explore = () => {
           <p className="text-muted-foreground">No posts found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-0.5 px-0.5">
+        <div className="grid grid-cols-3 gap-1 px-1">
           {posts.map((post) => (
-            <div
+            <BombThumbnail
               key={post.id}
-              className="aspect-square cursor-pointer overflow-hidden"
+              imageUrl={post.image_url}
+              videoUrl={post.video_url}
+              caption={post.caption}
               onClick={() => navigate(`/post/${post.id}`)}
-            >
-              {post.video_url ? (
-                <div className="relative h-full w-full">
-                  <video
-                    src={post.video_url}
-                    className="h-full w-full object-cover hover:scale-105 transition-transform"
-                    muted
-                    preload="metadata"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Play className="h-6 w-6 text-white/80 drop-shadow-lg" fill="white" fillOpacity={0.8} />
-                  </div>
-                </div>
-              ) : post.image_url ? (
-                <img
-                  src={post.image_url}
-                  alt={post.caption || "AI content"}
-                  className="h-full w-full object-cover hover:scale-105 transition-transform"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-muted">
-                  <Sparkles className="h-6 w-6 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+            />
           ))}
         </div>
       )}
