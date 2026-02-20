@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const aiTools = ["Midjourney", "DALL-E", "Stable Diffusion", "Firefly", "Leonardo", "Other"];
@@ -34,6 +34,8 @@ const Create = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string } | null>(null);
+  const [checking, setChecking] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -105,7 +107,27 @@ const Create = () => {
         uploadedUrl = publicUrl;
       }
 
+      // Run AI filter on uploaded images (skip for videos and in-app generated)
+      let verifiedAi = mode === "generate";
       const isVideo = file?.type?.startsWith("video/");
+
+      if (mode === "upload" && !isVideo && uploadedUrl) {
+        setChecking(true);
+        try {
+          const { data: filterData, error: filterError } = await supabase.functions.invoke("ai-filter", {
+            body: { imageUrl: uploadedUrl },
+          });
+          if (!filterError && filterData) {
+            setAiCheckResult(filterData);
+            verifiedAi = filterData.is_ai_generated && filterData.confidence >= 0.7;
+          }
+        } catch (filterErr) {
+          console.error("AI filter error:", filterErr);
+          // Allow post but mark as unverified
+        } finally {
+          setChecking(false);
+        }
+      }
 
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
@@ -115,12 +137,19 @@ const Create = () => {
         tags,
         category,
         ai_tool: mode === "generate" ? "in-app" : aiTool,
-        is_verified_ai: mode === "generate",
+        is_verified_ai: verifiedAi,
       });
 
       if (error) throw error;
 
-      toast({ title: "Posted!" });
+      if (!verifiedAi && mode === "upload" && !isVideo) {
+        toast({
+          title: "Post published — flagged for review",
+          description: "Our AI couldn't verify this as AI-generated content. It will be reviewed by the community.",
+        });
+      } else {
+        toast({ title: "Posted! ✨" });
+      }
       navigate("/");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -255,9 +284,37 @@ const Create = () => {
           )}
         </div>
 
-        <Button onClick={handlePost} disabled={loading} className="w-full" size="lg">
-          {loading ? "Publishing..." : "Publish Post"}
+        <Button onClick={handlePost} disabled={loading || checking} className="w-full" size="lg">
+          {checking ? (
+            <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking AI content...</>
+          ) : loading ? (
+            "Publishing..."
+          ) : (
+            "Publish Post"
+          )}
         </Button>
+
+        {aiCheckResult && (
+          <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
+            aiCheckResult.is_ai_generated && aiCheckResult.confidence >= 0.7
+              ? "bg-green-500/10 text-green-500 border border-green-500/20"
+              : "bg-orange-500/10 text-orange-500 border border-orange-500/20"
+          }`}>
+            {aiCheckResult.is_ai_generated && aiCheckResult.confidence >= 0.7 ? (
+              <ShieldCheck className="h-5 w-5 shrink-0" />
+            ) : (
+              <ShieldAlert className="h-5 w-5 shrink-0" />
+            )}
+            <div>
+              <p className="font-medium">
+                {aiCheckResult.is_ai_generated && aiCheckResult.confidence >= 0.7
+                  ? "✅ AI-generated content verified"
+                  : "⚠️ Flagged for review"}
+              </p>
+              <p className="text-xs opacity-80">{aiCheckResult.reason}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
