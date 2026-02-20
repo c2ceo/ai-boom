@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN is_family_friendly boolean NOT NULL DEFAULT true;

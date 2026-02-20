@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BombThumbnail from "@/components/BombThumbnail";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const categories = ["All", "AI Art", "AI Photography", "AI Video", "AI Abstract"];
 
@@ -12,12 +14,13 @@ const Explore = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [familyFriendly, setFamilyFriendly] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPosts();
-  }, [activeCategory, search]);
+  }, [activeCategory, search, familyFriendly]);
 
   const fetchPosts = async () => {
     let query = supabase
@@ -33,6 +36,10 @@ const Explore = () => {
 
     if (search) {
       query = query.ilike("caption", `%${search}%`);
+    }
+
+    if (familyFriendly) {
+      query = query.eq("is_family_friendly", true);
     }
 
     const { data } = await query;
@@ -55,8 +62,9 @@ const Explore = () => {
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="flex gap-2 px-4 mb-4 overflow-x-auto hide-scrollbar">
+      {/* Categories + Family Friendly Toggle */}
+      <div className="flex items-center gap-2 px-4 mb-4">
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
         {categories.map((cat) => (
           <Badge
             key={cat}
@@ -67,6 +75,13 @@ const Explore = () => {
             {cat}
           </Badge>
         ))}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Switch id="ff-explore" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
+          <Label htmlFor="ff-explore" className="flex items-center gap-1 text-xs cursor-pointer whitespace-nowrap">
+            <ShieldCheck className="h-3.5 w-3.5" />
+          </Label>
+        </div>
       </div>
 
       {/* Grid */}

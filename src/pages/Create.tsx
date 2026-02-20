@@ -34,7 +34,7 @@ const Create = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string } | null>(null);
+  const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -129,6 +129,7 @@ const Create = () => {
         }
       }
 
+      const isFamilyFriendly = aiCheckResult?.is_family_friendly !== false;
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
@@ -139,6 +140,7 @@ const Create = () => {
         category,
         ai_tool: mode === "generate" ? "in-app" : aiTool,
         is_verified_ai: verifiedAi,
+        is_family_friendly: isFamilyFriendly,
         status: needsReview ? "pending_review" : "approved",
         voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
       } as any);

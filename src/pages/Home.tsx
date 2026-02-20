@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type PostWithProfile = {
   id: string;
@@ -30,6 +32,7 @@ const Home = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [familyFriendly, setFamilyFriendly] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -54,15 +57,21 @@ const Home = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, [user]);
+  }, [user, familyFriendly]);
 
   const fetchPosts = async () => {
-    const { data: postsData } = await supabase
+    let query = supabase
       .from("posts")
       .select("*")
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(50);
+
+    if (familyFriendly) {
+      query = query.eq("is_family_friendly", true);
+    }
+
+    const { data: postsData } = await query;
 
     if (postsData && postsData.length > 0) {
       // Fetch profiles for all post user_ids
@@ -114,6 +123,12 @@ const Home = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y-mandatory hide-scrollbar">
+      <div className="flex items-center gap-2 px-4 py-2 sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
+        <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
+        <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm cursor-pointer">
+          <ShieldCheck className="h-4 w-4" /> Family Friendly
+        </Label>
+      </div>
       {posts.map((post) => (
         <FeedCard
           key={post.id}
