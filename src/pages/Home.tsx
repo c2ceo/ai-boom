@@ -126,7 +126,7 @@ const Home = () => {
       <div className="flex items-center gap-2 px-4 py-2 sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
         <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
         <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" /> Family Friendly
+          <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
         </Label>
       </div>
       {posts.map((post) => (
