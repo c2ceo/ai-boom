@@ -29,17 +29,17 @@ const CommunityVote = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ["pending-votes"],
     queryFn: async () => {
-      const { data: postsData, error } = await supabase
+      const { data: postsData, error } = await (supabase
         .from("posts")
-        .select("*")
-        .eq("status" as any, "pending_review")
-        .gt("voting_expires_at" as any, new Date().toISOString())
+        .select("*") as any)
+        .eq("status", "pending_review")
+        .gt("voting_expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (!postsData?.length) return [];
 
       // Fetch profiles for these posts
-      const userIds = [...new Set(postsData.map((p) => p.user_id))];
+      const userIds = [...new Set(postsData.map((p: any) => p.user_id))] as string[];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, username, display_name, avatar_url")
@@ -178,10 +178,10 @@ const CommunityVote = () => {
             return (
               <Card key={post.id} className="overflow-hidden bg-card/50 border-border/50">
                 {post.image_url && (
-                  <img src={post.image_url} alt="" className="w-full h-56 object-cover" />
+                  <img src={post.image_url} alt="" className="w-full rounded-t-lg" />
                 )}
                 {post.video_url && (
-                  <video src={post.video_url} controls className="w-full h-56 object-cover" />
+                  <video src={post.video_url} controls className="w-full rounded-t-lg" />
                 )}
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
