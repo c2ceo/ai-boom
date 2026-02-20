@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import BottomNav from "@/components/BottomNav";
+import ThemeToggle from "@/components/ThemeToggle";
 import DevToggle from "@/components/DevToggle";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
@@ -41,6 +43,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-background">
+    <div className="fixed top-3 right-3 z-50">
+      <ThemeToggle />
+    </div>
     {children}
     <BottomNav />
   </div>
@@ -83,10 +88,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <div className="dark">
+          <ThemeProvider>
             <DevToggle />
             <AppRoutes />
-          </div>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
