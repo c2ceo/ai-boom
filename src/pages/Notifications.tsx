@@ -18,7 +18,11 @@ const Notifications = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) fetchNotifications();
+    if (user) {
+      fetchNotifications();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const fetchNotifications = async () => {
