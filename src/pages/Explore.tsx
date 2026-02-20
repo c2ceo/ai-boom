@@ -79,7 +79,7 @@ const Explore = () => {
         <div className="flex items-center gap-1.5 shrink-0">
           <Switch id="ff-explore" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
           <Label htmlFor="ff-explore" className="flex items-center gap-1 text-xs cursor-pointer whitespace-nowrap">
-            <ShieldCheck className="h-3.5 w-3.5" />
+            <ShieldCheck className="h-3.5 w-3.5" /> Family Friendly
           </Label>
         </div>
       </div>
