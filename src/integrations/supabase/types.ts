@@ -195,6 +195,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          is_family_friendly: boolean
           is_verified_ai: boolean
           likes_count: number
           status: string
@@ -212,6 +213,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_family_friendly?: boolean
           is_verified_ai?: boolean
           likes_count?: number
           status?: string
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_family_friendly?: boolean
           is_verified_ai?: boolean
           likes_count?: number
           status?: string
