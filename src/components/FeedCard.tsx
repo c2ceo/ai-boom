@@ -121,7 +121,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   };
 
   return (
-    <div className="snap-start w-full flex flex-col bg-background">
+    <div className="snap-start w-full flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
       {/* Media */}
       <div
         className={`relative w-full max-w-lg mx-auto cursor-pointer ${post.video_url ? "" : "aspect-square"}`}
