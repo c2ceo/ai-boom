@@ -151,8 +151,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           )}
         </AnimatePresence>
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+        {/* Removed gradient overlay */}
 
         {/* AI Tool Badge */}
         <div className="absolute top-4 right-4 flex items-center gap-1">
@@ -178,13 +177,13 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                 </Avatar>
                 <button
                   onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
-                  className="font-semibold text-sm text-foreground hover:underline"
+                  className="font-semibold text-sm hover:underline drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-white mix-blend-difference"
                 >
                   @{profile?.username || "unknown"}
                 </button>
               </div>
               {post.caption && (
-                <p className="text-sm text-foreground/80 line-clamp-2">{post.caption}</p>
+                <p className="text-sm line-clamp-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-white mix-blend-difference">{post.caption}</p>
               )}
             </div>
 
