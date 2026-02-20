@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, LogOut, Play, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, LogOut, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
+import BombThumbnail from "@/components/BombThumbnail";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -328,43 +329,22 @@ const Profile = () => {
             <p className="text-muted-foreground">No posts yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-0.5">
+          <div className="grid grid-cols-3 gap-1">
             {posts.map((post) => (
-              <div
+              <BombThumbnail
                 key={post.id}
-                className="aspect-square cursor-pointer overflow-hidden relative"
+                imageUrl={post.image_url}
+                videoUrl={post.video_url}
+                caption={post.caption}
                 onClick={() => selectMode ? toggleSelectPost(post.id) : navigate(`/post/${post.id}`)}
-              >
-                {post.image_url ? (
-                  <img
-                    src={post.image_url}
-                    alt={post.caption || ""}
-                    className="h-full w-full object-cover hover:opacity-80 transition-opacity"
-                    loading="lazy"
-                  />
-                ) : post.video_url ? (
-                  <div className="relative h-full w-full">
-                    <video
-                      src={post.video_url}
-                      className="h-full w-full object-cover"
-                      muted
-                      preload="metadata"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Play className="h-6 w-6 text-white fill-white" />
+                overlay={
+                  selectMode ? (
+                    <div className={`absolute inset-0 flex items-center justify-center transition-colors ${selectedPosts.has(post.id) ? "bg-primary/30" : "bg-black/10"}`} style={{ borderRadius: "50% 50% 50% 50% / 55% 55% 45% 45%" }}>
+                      <CheckCircle className={`h-6 w-6 ${selectedPosts.has(post.id) ? "text-primary" : "text-white/50"}`} />
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-muted">
-                    <Sparkles className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                )}
-                {selectMode && (
-                  <div className={`absolute inset-0 flex items-center justify-center transition-colors ${selectedPosts.has(post.id) ? "bg-primary/30" : "bg-black/10"}`}>
-                    <CheckCircle className={`h-6 w-6 ${selectedPosts.has(post.id) ? "text-primary" : "text-white/50"}`} />
-                  </div>
-                )}
-              </div>
+                  ) : undefined
+                }
+              />
             ))}
           </div>
         )}
