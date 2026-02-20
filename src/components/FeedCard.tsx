@@ -109,10 +109,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   };
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] w-full snap-start flex items-center justify-center bg-background">
+    <div className="snap-start w-full flex flex-col bg-background">
       {/* Media */}
       <div
-        className="relative h-full w-full max-w-lg cursor-pointer"
+        className="relative w-full max-w-lg mx-auto aspect-square cursor-pointer"
         onDoubleClick={handleDoubleTap}
       >
         {post.video_url ? (
@@ -151,8 +151,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           )}
         </AnimatePresence>
 
-        {/* Removed gradient overlay */}
-
         {/* AI Tool Badge */}
         <div className="absolute top-4 right-4 flex items-center gap-1">
           <Badge variant="secondary" className="bg-secondary/80 backdrop-blur-sm text-xs">
@@ -162,72 +160,72 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <Verified className="h-4 w-4 text-primary" />
           )}
         </div>
+      </div>
 
-        {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="flex items-end justify-between">
-            {/* Left: user info + caption */}
-            <div className="flex-1 mr-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar className="h-8 w-8 border-2 border-primary/50">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                    {(profile?.username || "?")[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
-                  className="font-semibold text-sm hover:underline drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-white mix-blend-difference"
-                >
-                  @{profile?.username || "unknown"}
-                </button>
-              </div>
-              {post.caption && (
-                <p className="text-sm line-clamp-2 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-white mix-blend-difference">{post.caption}</p>
-              )}
+      {/* Info section below the post */}
+      <div className="max-w-lg mx-auto w-full px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Left: user info + caption */}
+          <div className="flex-1 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Avatar className="h-8 w-8 border-2 border-primary/50">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                  {(profile?.username || "?")[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
+                className="font-semibold text-sm text-foreground hover:underline"
+              >
+                @{profile?.username || "unknown"}
+              </button>
             </div>
+            {post.caption && (
+              <p className="text-sm text-muted-foreground line-clamp-2 ml-10">{post.caption}</p>
+            )}
+          </div>
 
-            {/* Right: action buttons */}
-            <div className="flex flex-col items-center gap-4">
-              <button onClick={handleLikeButton} className="flex flex-col items-center gap-1">
-                <Heart
-                  className={`h-7 w-7 transition-colors ${
-                    liked ? "fill-accent text-accent" : "text-foreground"
-                  }`}
-                />
-                <span className="text-xs text-foreground">{likesCount}</span>
-              </button>
-              <button onClick={() => onComment?.(post.id)} className="flex flex-col items-center gap-1">
-                <MessageCircle className="h-7 w-7 text-foreground" />
-                <span className="text-xs text-foreground">{commentsCount}</span>
-              </button>
-              <button onClick={handleShare} className="flex flex-col items-center gap-1">
-                <Share2 className="h-6 w-6 text-foreground" />
-              </button>
-              {isOwner && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex flex-col items-center gap-1">
-                      <MoreVertical className="h-6 w-6 text-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-popover z-50">
-                    <DropdownMenuItem onClick={() => onEdit?.(post.id)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onArchive?.(post.id)}>
-                      <Archive className="mr-2 h-4 w-4" />
-                      Archive
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDelete?.(post.id)} className="text-destructive focus:text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
+          {/* Right: action buttons */}
+          <div className="flex items-center gap-3">
+            <button onClick={handleLikeButton} className="flex flex-col items-center gap-0.5">
+              <Heart
+                className={`h-6 w-6 transition-colors ${
+                  liked ? "fill-accent text-accent" : "text-foreground"
+                }`}
+              />
+              <span className="text-xs text-muted-foreground">{likesCount}</span>
+            </button>
+            <button onClick={() => onComment?.(post.id)} className="flex flex-col items-center gap-0.5">
+              <MessageCircle className="h-6 w-6 text-foreground" />
+              <span className="text-xs text-muted-foreground">{commentsCount}</span>
+            </button>
+            <button onClick={handleShare}>
+              <Share2 className="h-5 w-5 text-foreground" />
+            </button>
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button>
+                    <MoreVertical className="h-5 w-5 text-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover z-50">
+                  <DropdownMenuItem onClick={() => onEdit?.(post.id)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onArchive?.(post.id)}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDelete?.(post.id)} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
