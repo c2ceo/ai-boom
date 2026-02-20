@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive } from "lucide-react";
+import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,7 @@ interface FeedCardProps {
     is_verified_ai: boolean;
     likes_count: number;
     comments_count: number;
+    views_count?: number;
     category: string;
     user_id: string;
   };
@@ -46,6 +47,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [liked, setLiked] = useState(isLiked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
+  const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
@@ -53,7 +55,17 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   useEffect(() => {
     setLikesCount(post.likes_count);
     setCommentsCount(post.comments_count);
-  }, [post.likes_count, post.comments_count]);
+    setViewsCount(post.views_count || 0);
+  }, [post.likes_count, post.comments_count, post.views_count]);
+
+  // Track view once per mount
+  useEffect(() => {
+    const trackView = async () => {
+      await supabase.rpc("increment_count", { table_name: "posts", column_name: "views_count", row_id: post.id, amount: 1 });
+      setViewsCount((c) => c + 1);
+    };
+    trackView();
+  }, [post.id]);
 
   useEffect(() => {
     const channel = supabase
@@ -188,6 +200,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
 
           {/* Right: action buttons */}
           <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-0.5">
+              <Eye className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{viewsCount}</span>
+            </div>
             <button onClick={handleLikeButton} className="flex flex-col items-center gap-0.5">
               <Heart
                 className={`h-6 w-6 transition-colors ${
