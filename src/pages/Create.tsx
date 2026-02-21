@@ -78,9 +78,11 @@ const Create = () => {
   };
 
   const handlePost = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Please sign in to publish", description: "You need to be logged in to create a post.", variant: "destructive" });
+      return;
+    }
     if (mode === "upload" && !file) {
-      toast({ title: "Please select a file", variant: "destructive" });
       return;
     }
     if (mode === "generate" && !generatedImage) {
@@ -164,7 +166,7 @@ const Create = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
+    <div className="min-h-screen pb-28 pt-4 px-4 text-foreground">
       <h1 className="text-2xl font-bold mb-4 text-foreground">Create Post</h1>
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate")}>
