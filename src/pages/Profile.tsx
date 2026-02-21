@@ -26,6 +26,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import FollowListSheet from "@/components/FollowListSheet";
 
+const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
+
 const Profile = () => {
   const { userId } = useParams();
   const { user, signOut } = useAuth();
@@ -46,7 +48,14 @@ const Profile = () => {
   const targetUserId = userId || user?.id;
 
   useEffect(() => {
-    if (targetUserId) fetchProfile();
+    if (targetUserId) {
+      fetchProfile();
+    } else if (isLovablePreview) {
+      // In preview mode with no user, show a placeholder profile
+      setProfile({ username: "preview_user", display_name: "Preview User", bio: "This is a preview profile.", posts_count: 0, followers_count: 0, following_count: 0 });
+      setPosts([]);
+      setLoading(false);
+    }
   }, [targetUserId]);
 
   // Realtime subscription for profile count updates
