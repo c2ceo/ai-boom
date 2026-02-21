@@ -52,9 +52,7 @@ const Profile = () => {
     if (targetUserId) {
       fetchProfile();
     } else if (isLovablePreview) {
-      // In preview mode with no user, show a placeholder profile
-      setProfile({ username: "preview_user", display_name: "Preview User", bio: "This is a preview profile.", posts_count: 0, followers_count: 0, following_count: 0 });
-      setPosts([]);
+      // No authenticated user in preview — stop loading, render sign-in prompt
       setLoading(false);
     }
   }, [targetUserId]);
@@ -207,6 +205,19 @@ const Profile = () => {
     return (
       <div className="flex h-screen items-center justify-center">
         <Sparkles className="h-8 w-8 animate-pulse text-primary" />
+      </div>
+    );
+  }
+
+  if (!targetUserId || !profile) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+        <Sparkles className="h-10 w-10 text-primary" />
+        <h2 className="text-xl font-bold">Sign in to view your profile</h2>
+        <p className="text-sm text-muted-foreground">Create an account or sign in to get started.</p>
+        <Button onClick={() => navigate("/auth")} className="mt-2">
+          Sign In
+        </Button>
       </div>
     );
   }
