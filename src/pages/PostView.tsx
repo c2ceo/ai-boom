@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,66 +24,115 @@ import { useToast } from "@/hooks/use-toast";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
 
+interface PostWithProfile {
+  post: any;
+  profile: any;
+  isLiked: boolean;
+}
+
 const PostView = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [post, setPost] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [isLiked, setIsLiked] = useState(false);
+  const [items, setItems] = useState<PostWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentOpen, setCommentOpen] = useState(false);
+  const [commentPostId, setCommentPostId] = useState<string>("");
   const [editOpen, setEditOpen] = useState(false);
   const [editCaption, setEditCaption] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [editPostId, setEditPostId] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (postId) fetchPost();
-  }, [postId]);
-
-  const fetchPost = async () => {
+  const fetchPostWithProfile = useCallback(async (id: string): Promise<PostWithProfile | null> => {
     const { data: postData } = await supabase
       .from("posts")
       .select("*")
-      .eq("id", postId!)
+      .eq("id", id)
       .single();
-
-    if (!postData) {
-      setLoading(false);
-      return;
-    }
-    setPost(postData);
+    if (!postData) return null;
 
     const { data: profileData } = await supabase
       .from("profiles")
       .select("username, display_name, avatar_url")
       .eq("user_id", postData.user_id)
       .single();
-    setProfile(profileData);
 
+    let isLiked = false;
     if (user) {
       const { data: likeData } = await supabase
         .from("likes")
         .select("id")
         .eq("user_id", user.id)
-        .eq("post_id", postId!)
+        .eq("post_id", id)
         .maybeSingle();
-      setIsLiked(!!likeData);
+      isLiked = !!likeData;
     }
 
-    setLoading(false);
+    return { post: postData, profile: profileData, isLiked };
+  }, [user]);
+
+  const fetchRandomPosts = useCallback(async (excludeIds: Set<string>) => {
+    // Fetch a pool of random posts excluding already loaded ones
+    const { data } = await supabase
+      .from("posts")
+      .select("id")
+      .limit(200);
+
+    if (!data || data.length === 0) return [];
+
+    // Filter out already loaded, shuffle, take 6
+    const available = data.filter((p) => !excludeIds.has(p.id));
+    const shuffled = available.sort(() => Math.random() - 0.5).slice(0, 6);
+
+    const results: PostWithProfile[] = [];
+    for (const { id } of shuffled) {
+      const item = await fetchPostWithProfile(id);
+      if (item) results.push(item);
+    }
+    return results;
+  }, [fetchPostWithProfile]);
+
+  useEffect(() => {
+    if (!postId) return;
+    const init = async () => {
+      setLoading(true);
+      const main = await fetchPostWithProfile(postId);
+      if (!main) {
+        setLoading(false);
+        return;
+      }
+      const ids = new Set([postId]);
+      const random = await fetchRandomPosts(ids);
+      random.forEach((r) => ids.add(r.post.id));
+      setItems([main, ...random]);
+      setLoadedIds(ids);
+      setLoading(false);
+    };
+    init();
+  }, [postId, fetchPostWithProfile, fetchRandomPosts]);
+
+  const handleLoadMore = async () => {
+    const more = await fetchRandomPosts(loadedIds);
+    if (more.length === 0) return;
+    const newIds = new Set(loadedIds);
+    more.forEach((r) => newIds.add(r.post.id));
+    setLoadedIds(newIds);
+    setItems((prev) => [...prev, ...more]);
   };
 
-  const handleDelete = async () => {
-    if (!post || post.user_id !== user?.id) return;
-    const { error } = await supabase.from("posts").delete().eq("id", post.id);
+  const handleDelete = async (id: string) => {
+    const item = items.find((i) => i.post.id === id);
+    if (!item || item.post.user_id !== user?.id) return;
+    const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: "Failed to delete post", variant: "destructive" });
     } else {
       toast({ title: "Post deleted" });
-      navigate(-1);
+      setItems((prev) => prev.filter((i) => i.post.id !== id));
+      if (id === postId) navigate(-1);
     }
   };
 
@@ -91,34 +140,38 @@ const PostView = () => {
     toast({ title: "Archived", description: "Post archived (coming soon)" });
   };
 
-  const handleRepost = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+  const handleRepost = (id: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${id}`);
     toast({ title: "Link copied!", description: "Share it to repost" });
   };
 
-  const openEdit = () => {
-    setEditCaption(post.caption || "");
-    setEditTags((post.tags || []).join(", "));
+  const openEdit = (id: string) => {
+    const item = items.find((i) => i.post.id === id);
+    if (!item) return;
+    setEditPostId(id);
+    setEditCaption(item.post.caption || "");
+    setEditTags((item.post.tags || []).join(", "));
     setEditOpen(true);
   };
 
   const handleSaveEdit = async () => {
     setSaving(true);
-    const tagsArray = editTags
-      .split(",")
-      .map((t: string) => t.trim())
-      .filter(Boolean);
+    const tagsArray = editTags.split(",").map((t: string) => t.trim()).filter(Boolean);
     const { error } = await supabase
       .from("posts")
       .update({ caption: editCaption, tags: tagsArray })
-      .eq("id", post.id);
+      .eq("id", editPostId);
     setSaving(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Post updated!" });
       setEditOpen(false);
-      fetchPost();
+      // Refresh the edited post
+      const updated = await fetchPostWithProfile(editPostId);
+      if (updated) {
+        setItems((prev) => prev.map((i) => (i.post.id === editPostId ? updated : i)));
+      }
     }
   };
 
@@ -130,7 +183,7 @@ const PostView = () => {
     );
   }
 
-  if (!post) {
+  if (items.length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Post not found</p>
@@ -138,8 +191,6 @@ const PostView = () => {
       </div>
     );
   }
-
-  const isOwner = user?.id === post.user_id;
 
   return (
     <div className="min-h-screen pb-20">
@@ -157,7 +208,7 @@ const PostView = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleRepost}>
+            <DropdownMenuItem onClick={() => handleRepost(postId!)}>
               <Repeat2 className="mr-2 h-4 w-4" />
               Repost
             </DropdownMenuItem>
@@ -165,32 +216,45 @@ const PostView = () => {
               <Archive className="mr-2 h-4 w-4" />
               Archive
             </DropdownMenuItem>
-            {isOwner && (
-              <DropdownMenuItem onClick={openEdit}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-            )}
-            {isOwner && (
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+            {user?.id === items[0]?.post.user_id && (
+              <>
+                <DropdownMenuItem onClick={() => openEdit(postId!)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDelete(postId!)} className="text-destructive focus:text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="h-[calc(100vh-4rem)]">
-        <FeedCard
-          post={post}
-          profile={profile || undefined}
-          isLiked={isLiked}
-          onLikeToggle={fetchPost}
-          onComment={() => setCommentOpen(true)}
-        />
+
+      <div className="snap-y snap-mandatory overflow-y-auto" style={{ height: "calc(100vh - 4rem)" }}>
+        {items.map(({ post, profile, isLiked }) => (
+          <FeedCard
+            key={post.id}
+            post={post}
+            profile={profile || undefined}
+            isLiked={isLiked}
+            onLikeToggle={() => {}}
+            onComment={(id) => { setCommentPostId(id); setCommentOpen(true); }}
+            onDelete={handleDelete}
+            onEdit={openEdit}
+            onArchive={() => handleArchive()}
+          />
+        ))}
+        <div className="flex justify-center py-6">
+          <Button variant="secondary" onClick={handleLoadMore}>
+            Load more posts
+          </Button>
+        </div>
       </div>
+
       <CommentSheet
-        postId={post.id}
+        postId={commentPostId}
         open={commentOpen}
         onOpenChange={setCommentOpen}
       />
