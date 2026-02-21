@@ -64,7 +64,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/auth" element={user && !isLovablePreview ? <Navigate to="/" replace /> : <Auth />} />
+      <Route path="/auth" element={(user || isLovablePreview) ? <Navigate to="/" replace /> : <Auth />} />
       <Route path="/" element={<ProtectedRoute><AppLayout><Home /></AppLayout></ProtectedRoute>} />
       <Route path="/explore" element={<ProtectedRoute><AppLayout><Explore /></AppLayout></ProtectedRoute>} />
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
