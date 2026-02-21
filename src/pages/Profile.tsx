@@ -43,6 +43,7 @@ const Profile = () => {
   const [deleting, setDeleting] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
   const [showFollowList, setShowFollowList] = useState(false);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -220,7 +221,7 @@ const Profile = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" onClick={() => setShowSignOutDialog(true)}>
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
@@ -373,6 +374,22 @@ const Profile = () => {
             <AlertDialogAction onClick={handleDeleteSelected} disabled={deleting} className="bg-destructive text-destructive-foreground">
               {deleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Sign out confirmation */}
+      <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign Out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you wish to sign out?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSignOut}>Yes</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
