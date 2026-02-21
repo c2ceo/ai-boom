@@ -24,7 +24,7 @@ import { Sparkles } from "lucide-react";
 
 const queryClient = new QueryClient();
 
-const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname === 'localhost';
+const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
