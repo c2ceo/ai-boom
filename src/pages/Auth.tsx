@@ -20,8 +20,11 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Auto-login via edge function using stored dev credentials
+  // Auto-login via edge function — skip in Lovable preview (auth is already bypassed)
   useEffect(() => {
+    const isPreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
+    if (isPreview) return;
+
     const autoLogin = async () => {
       try {
         const res = await fetch(
