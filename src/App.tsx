@@ -65,8 +65,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
-      <Route path="/" element={<ProtectedRoute><AppLayout><Home /></AppLayout></ProtectedRoute>} />
-      <Route path="/explore" element={<ProtectedRoute><AppLayout><Explore /></AppLayout></ProtectedRoute>} />
+      <Route path="/" element={<AppLayout><Home /></AppLayout>} />
+      <Route path="/explore" element={<AppLayout><Explore /></AppLayout>} />
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
       <Route path="/vote" element={<ProtectedRoute><AppLayout><CommunityVote /></AppLayout></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
