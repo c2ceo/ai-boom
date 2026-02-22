@@ -331,6 +331,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_profile: {
+        Args: { target_user_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          created_at: string
+          display_name: string
+          followers_count: number
+          following_count: number
+          id: string
+          is_private: boolean
+          posts_count: number
+          updated_at: string
+          user_id: string
+          username: string
+        }[]
+      }
       increment_count: {
         Args: {
           amount?: number

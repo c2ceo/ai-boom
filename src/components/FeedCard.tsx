@@ -84,7 +84,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   }, [post.id]);
 
   const handleDoubleTap = async () => {
-    if (!user) return;
+    if (!user) { navigate("/auth"); return; }
     if (!liked) {
       setLiked(true);
       setLikesCount((c) => c + 1);
@@ -100,7 +100,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   };
 
   const handleLikeButton = async () => {
-    if (!user) return;
+    if (!user) { navigate("/auth"); return; }
     if (liked) {
       setLiked(false);
       setLikesCount((c) => c - 1);
@@ -212,7 +212,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               />
               <span className="text-xs text-muted-foreground">{likesCount}</span>
             </button>
-            <button onClick={() => onComment?.(post.id)} className="flex flex-col items-center gap-0.5">
+            <button onClick={() => { if (!user) { navigate("/auth"); return; } onComment?.(post.id); }} className="flex flex-col items-center gap-0.5">
               <MessageCircle className="h-6 w-6 text-foreground" />
               <span className="text-xs text-muted-foreground">{commentsCount}</span>
             </button>
