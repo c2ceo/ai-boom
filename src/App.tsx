@@ -70,14 +70,14 @@ const AppRoutes = () => {
       <Route path="/" element={<AppLayout><Home /></AppLayout>} />
       <Route path="/explore" element={<AppLayout><Explore /></AppLayout>} />
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
-      <Route path="/vote" element={<ProtectedRoute><AppLayout><CommunityVote /></AppLayout></ProtectedRoute>} />
+      <Route path="/vote" element={<AppLayout><CommunityVote /></AppLayout>} />
       <Route path="/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
-      <Route path="/profile/:userId" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
+      <Route path="/profile/:userId" element={<AppLayout><Profile /></AppLayout>} />
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
-      <Route path="/privacy" element={<ProtectedRoute><AppLayout><Privacy /></AppLayout></ProtectedRoute>} />
-      <Route path="/post/:postId" element={<ProtectedRoute><AppLayout><PostView /></AppLayout></ProtectedRoute>} />
+      <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />
+      <Route path="/post/:postId" element={<AppLayout><PostView /></AppLayout>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
