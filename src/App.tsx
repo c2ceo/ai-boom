@@ -19,6 +19,7 @@ import Auth from "./pages/Auth";
 import PostView from "./pages/PostView";
 import Settings from "./pages/Settings";
 import Privacy from "./pages/Privacy";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Sparkles } from "lucide-react";
 
@@ -65,6 +66,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<AppLayout><Home /></AppLayout>} />
       <Route path="/explore" element={<AppLayout><Explore /></AppLayout>} />
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
