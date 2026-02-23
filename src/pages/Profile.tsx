@@ -101,6 +101,7 @@ const Profile = () => {
       .from("posts")
       .select("*")
       .eq("user_id", targetUserId!)
+      .in("status", ["approved", "pending_review"])
       .order("created_at", { ascending: false });
 
     setPosts(postsData || []);

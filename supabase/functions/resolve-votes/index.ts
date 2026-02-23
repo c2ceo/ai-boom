@@ -41,13 +41,23 @@ serve(async (req) => {
       const notAiVotes = votes?.filter((v: any) => !v.vote_ai).length || 0;
 
       // Majority wins; ties favor AI (benefit of the doubt)
-      const newStatus = aiVotes >= notAiVotes ? "approved" : "rejected";
-      const isVerified = aiVotes >= notAiVotes;
+      const isAi = aiVotes >= notAiVotes;
 
-      await supabase
-        .from("posts")
-        .update({ status: newStatus, is_verified_ai: isVerified })
-        .eq("id", post.id);
+      if (isAi) {
+        // Approved as AI — publish the post
+        await supabase
+          .from("posts")
+          .update({ status: "approved", is_verified_ai: true })
+          .eq("id", post.id);
+      } else {
+        // Rejected as not AI — delete the post entirely
+        await supabase.from("post_votes").delete().eq("post_id", post.id);
+        await supabase.from("likes").delete().eq("post_id", post.id);
+        await supabase.from("comments").delete().eq("post_id", post.id);
+        await supabase.from("reports").delete().eq("post_id", post.id);
+        await supabase.from("notifications").delete().eq("post_id", post.id);
+        await supabase.from("posts").delete().eq("id", post.id);
+      }
 
       resolved++;
     }
