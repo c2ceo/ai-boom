@@ -52,9 +52,9 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isForgotPassword) {
-        const { error } = await (await import("@/integrations/supabase/client")).supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
-        });
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+           redirectTo: `${window.location.origin}/reset-password`,
+         });
         if (error) throw error;
         toast({
           title: "Reset link sent!",
