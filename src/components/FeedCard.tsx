@@ -194,7 +194,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               </button>
             </div>
             {post.caption && (
-              <p className="text-sm text-muted-foreground line-clamp-2 ml-10">{post.caption}</p>
+              <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
             )}
           </div>
 
