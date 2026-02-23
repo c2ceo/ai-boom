@@ -52,7 +52,7 @@ const Explore = () => {
             placeholder="Search AI content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary/50 border-border/50"
+            className="pl-10 bg-secondary/50 border-border/50 text-foreground"
           />
         </div>
       </div>
