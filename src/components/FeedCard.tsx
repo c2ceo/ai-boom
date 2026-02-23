@@ -124,7 +124,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className="snap-start w-full flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
       {/* Media */}
       <div
-        className={`relative w-full max-w-lg mx-auto cursor-pointer ${post.video_url ? "" : "aspect-square"}`}
+        className="relative w-full max-w-lg mx-auto cursor-pointer"
         onDoubleClick={handleDoubleTap}
       >
         {post.video_url ? (
@@ -140,7 +140,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           <img
             src={post.image_url}
             alt={post.caption || "AI generated content"}
-            className="h-full w-full object-cover"
+            className="w-full object-contain"
             loading="lazy"
           />
         ) : (
