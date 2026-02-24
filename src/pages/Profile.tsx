@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, LogOut, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
 import BombThumbnail from "@/components/BombThumbnail";
 import {
   DropdownMenu,
@@ -30,7 +30,7 @@ const isLovablePreview = window.location.hostname.includes('lovable.app') || win
 
 const Profile = () => {
   const { userId } = useParams();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
@@ -43,7 +43,7 @@ const Profile = () => {
   const [deleting, setDeleting] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
   const [showFollowList, setShowFollowList] = useState(false);
-  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -169,10 +169,6 @@ const Profile = () => {
     toast({ title: "Account reported", description: "We'll review this account." });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
 
   const toggleSelectPost = (postId: string) => {
     setSelectedPosts((prev) => {
@@ -237,9 +233,6 @@ const Profile = () => {
             )}
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => setShowSignOutDialog(true)}>
-              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         )}
@@ -395,21 +388,6 @@ const Profile = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Sign out confirmation */}
-      <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sign Out</AlertDialogTitle>
-            <AlertDialogDescription>
-              Do you wish to sign out?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSignOut}>Yes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {targetUserId && (
         <FollowListSheet
