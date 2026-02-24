@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
 import BombThumbnail from "@/components/BombThumbnail";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -224,18 +225,19 @@ const Profile = () => {
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">@{profile?.username || "user"}</h2>
-        {isOwnProfile && (
-          <div className="flex gap-2 items-center">
-            {isLovablePreview && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs gap-1">
-                Show Login
-              </Button>
-            )}
+        <div className="flex gap-1 items-center">
+          {isOwnProfile && isLovablePreview && (
+            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs gap-1">
+              Show Login
+            </Button>
+          )}
+          <ThemeToggle />
+          {isOwnProfile && (
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="h-5 w-5" />
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Profile info */}
