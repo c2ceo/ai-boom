@@ -44,9 +44,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-background">
-    <div className="fixed top-3 right-3 z-50">
-      <ThemeToggle />
-    </div>
     {children}
     <BottomNav />
   </div>
