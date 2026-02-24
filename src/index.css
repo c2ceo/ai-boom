@@ -93,7 +93,7 @@
 
 /* Snap scroll for TikTok-style feed */
 .snap-y-mandatory {
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
 }
 .snap-start {
   scroll-snap-align: start;
