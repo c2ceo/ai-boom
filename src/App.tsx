@@ -42,11 +42,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AppLayout = ({ children }: { children: React.ReactNode }) => (
+const AppLayout = ({ children, hideThemeToggle }: { children: React.ReactNode; hideThemeToggle?: boolean }) => (
   <div className="min-h-screen bg-background">
-    <div className="fixed top-3 right-3 z-50">
-      <ThemeToggle />
-    </div>
+    {!hideThemeToggle && (
+      <div className="fixed top-3 right-3 z-50">
+        <ThemeToggle />
+      </div>
+    )}
     <DevToggle />
     {children}
     <BottomNav />
@@ -73,8 +75,8 @@ const AppRoutes = () => {
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
       <Route path="/vote" element={<AppLayout><CommunityVote /></AppLayout>} />
       <Route path="/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
-      <Route path="/profile/:userId" element={<AppLayout><Profile /></AppLayout>} />
+      <Route path="/profile" element={<ProtectedRoute><AppLayout hideThemeToggle><Profile /></AppLayout></ProtectedRoute>} />
+      <Route path="/profile/:userId" element={<AppLayout hideThemeToggle><Profile /></AppLayout>} />
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
       <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />

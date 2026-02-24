@@ -225,11 +225,14 @@ const Profile = () => {
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">@{profile?.username || "user"}</h2>
-        {isOwnProfile && (
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
-            <Settings className="h-5 w-5" />
-          </Button>
-        )}
+        <div className="flex gap-1 items-center">
+          <ThemeToggle />
+          {isOwnProfile && (
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
+              <Settings className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Profile info */}
