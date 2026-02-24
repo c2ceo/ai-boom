@@ -11,7 +11,7 @@ const DevToggle = () => {
   return (
     <button
       onClick={() => navigate("/auth")}
-      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-lg hover:bg-muted transition-colors"
     >
       <Bug className="h-3.5 w-3.5" />
       Show Login
