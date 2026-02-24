@@ -122,7 +122,7 @@ const Home = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y-mandatory hide-scrollbar">
+    <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
       <div className="fixed top-3 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
         <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
         <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
