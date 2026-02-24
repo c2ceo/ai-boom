@@ -168,6 +168,11 @@ const Auth = () => {
               {isForgotPassword ? "Back to sign in" : isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
             </button>
           </div>
+          <div className="mt-4">
+            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+              Browse without an account
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
