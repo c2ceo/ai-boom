@@ -229,7 +229,12 @@ const Profile = () => {
       <div className="p-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">@{profile?.username || "user"}</h2>
         {isOwnProfile && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {isLovablePreview && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="text-xs gap-1">
+                Show Login
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="h-5 w-5" />
             </Button>

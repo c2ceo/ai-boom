@@ -91,7 +91,6 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <DevToggle />
             <AppRoutes />
           </ThemeProvider>
         </AuthProvider>
