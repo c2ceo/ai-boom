@@ -75,7 +75,6 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
-    transform: rotate(180deg);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -94,7 +93,7 @@
 
 /* Snap scroll for TikTok-style feed */
 .snap-y-mandatory {
-  scroll-snap-type: y proximity;
+  scroll-snap-type: y mandatory;
 }
 .snap-start {
   scroll-snap-align: start;

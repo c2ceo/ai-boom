@@ -331,40 +331,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_personalized_explore: {
-        Args: {
-          p_category?: string
-          p_family_friendly?: boolean
-          p_limit?: number
-          p_search?: string
-          p_user_id?: string
-        }
-        Returns: {
-          ai_tool: string
-          caption: string | null
-          category: string
-          comments_count: number
-          created_at: string
-          id: string
-          image_url: string | null
-          is_family_friendly: boolean
-          is_verified_ai: boolean
-          likes_count: number
-          status: string
-          tags: string[] | null
-          updated_at: string
-          user_id: string
-          video_url: string | null
-          views_count: number
-          voting_expires_at: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "posts"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
       get_public_profile: {
         Args: { target_user_id: string }
         Returns: {

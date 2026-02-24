@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import BombThumbnail from "@/components/BombThumbnail";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
 
 const categories = ["All", "AI Art", "AI Photography", "AI Video", "AI Abstract"];
 
@@ -17,27 +16,33 @@ const Explore = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [familyFriendly, setFamilyFriendly] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPosts();
-  }, [activeCategory, search, familyFriendly, user]);
+  }, [activeCategory, search, familyFriendly]);
 
   const fetchPosts = async () => {
-    setLoading(true);
-    const categoryParam = activeCategory !== "All"
-      ? activeCategory.toLowerCase().replace(" ", "-")
-      : null;
+    let query = supabase
+      .from("posts")
+      .select("*")
+      .order("likes_count", { ascending: false })
+      .limit(50);
 
-    const { data } = await supabase.rpc("get_personalized_explore", {
-      p_user_id: user?.id ?? null,
-      p_category: categoryParam,
-      p_search: search || null,
-      p_family_friendly: familyFriendly,
-      p_limit: 50,
-    });
+    if (activeCategory !== "All") {
+      const cat = activeCategory.toLowerCase().replace(" ", "-");
+      query = query.eq("category", cat);
+    }
 
+    if (search) {
+      query = query.ilike("caption", `%${search}%`);
+    }
+
+    if (familyFriendly) {
+      query = query.eq("is_family_friendly", true);
+    }
+
+    const { data } = await query;
     setPosts(data || []);
     setLoading(false);
   };
@@ -52,7 +57,7 @@ const Explore = () => {
             placeholder="Search AI content..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary/50 border-border/50 text-foreground"
+            className="pl-10 bg-secondary/50 border-border/50"
           />
         </div>
       </div>

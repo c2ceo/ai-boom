@@ -22,12 +22,7 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
   };
 
   return (
-    <motion.div
-      className="relative flex items-center justify-center p-2 pt-6 cursor-pointer"
-      onClick={handleClick}
-      whileHover={{ scale: 1.08, rotate: 2 }}
-      whileTap={{ scale: 0.92 }}
-    >
+    <div className="relative flex items-center justify-center p-2 pt-6">
       {/* Explosion ring flash */}
       <AnimatePresence>
         {exploding && (
@@ -125,14 +120,17 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
 
       {/* Bomb shape */}
       <motion.div
-        className="relative w-full"
+        className="relative w-full cursor-pointer"
         style={{ aspectRatio: "1" }}
+        onClick={handleClick}
         animate={
           exploding
             ? { scale: [1, 1.2, 0], rotate: [0, 8, -8, 0] }
             : { scale: 1, rotate: 0 }
         }
         transition={exploding ? { duration: 0.6 } : { type: "spring", stiffness: 300 }}
+        whileHover={{ scale: 1.08, rotate: 2 }}
+        whileTap={{ scale: 0.92 }}
       >
         {/* Fuse string — curved */}
         <svg
@@ -210,7 +208,7 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
           {overlay}
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 

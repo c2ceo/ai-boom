@@ -124,7 +124,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className="snap-start w-full flex flex-col items-center bg-background py-4">
       {/* Media */}
       <div
-        className="relative w-full max-w-lg mx-auto cursor-pointer max-h-[calc(100vh-12rem)] overflow-hidden"
+        className="relative w-full max-w-lg mx-auto cursor-pointer"
         onDoubleClick={handleDoubleTap}
       >
         {post.video_url ? (
