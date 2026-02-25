@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.resolve-votes]
 verify_jwt = false
+
+[functions.remix-post]
+verify_jwt = false

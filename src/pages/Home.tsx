@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
+import RemixSheet from "@/components/RemixSheet";
 import { Sparkles, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
@@ -32,6 +33,7 @@ const Home = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [remixPostId, setRemixPostId] = useState<string | null>(null);
   const [familyFriendly, setFamilyFriendly] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -139,6 +141,7 @@ const Home = () => {
           onDelete={handleDelete}
           onEdit={handleEdit}
           onArchive={() => handleArchive()}
+          onRemix={(postId) => setRemixPostId(postId)}
         />
       ))}
       {commentPostId && (
@@ -146,6 +149,15 @@ const Home = () => {
           postId={commentPostId}
           open={!!commentPostId}
           onOpenChange={(open) => !open && setCommentPostId(null)}
+        />
+      )}
+      {remixPostId && (
+        <RemixSheet
+          postId={remixPostId}
+          caption={posts.find((p) => p.id === remixPostId)?.caption || null}
+          imageUrl={posts.find((p) => p.id === remixPostId)?.image_url || null}
+          open={!!remixPostId}
+          onOpenChange={(open) => !open && setRemixPostId(null)}
         />
       )}
     </div>

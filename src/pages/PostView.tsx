@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
+import RemixSheet from "@/components/RemixSheet";
 
 interface PostWithProfile {
   post: any;
@@ -39,6 +40,7 @@ const PostView = () => {
   const [loading, setLoading] = useState(true);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentPostId, setCommentPostId] = useState<string>("");
+  const [remixPostId, setRemixPostId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editCaption, setEditCaption] = useState("");
   const [editTags, setEditTags] = useState("");
@@ -244,6 +246,7 @@ const PostView = () => {
             onDelete={handleDelete}
             onEdit={openEdit}
             onArchive={() => handleArchive()}
+            onRemix={(id) => setRemixPostId(id)}
           />
         ))}
         <div className="flex justify-center py-6">
@@ -258,6 +261,15 @@ const PostView = () => {
         open={commentOpen}
         onOpenChange={setCommentOpen}
       />
+      {remixPostId && (
+        <RemixSheet
+          postId={remixPostId}
+          caption={items.find((i) => i.post.id === remixPostId)?.post.caption || null}
+          imageUrl={items.find((i) => i.post.id === remixPostId)?.post.image_url || null}
+          open={!!remixPostId}
+          onOpenChange={(open) => !open && setRemixPostId(null)}
+        />
+      )}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
