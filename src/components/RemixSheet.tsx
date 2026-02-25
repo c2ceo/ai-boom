@@ -122,7 +122,8 @@ const RemixSheet = ({ postId, caption, imageUrl, open, onOpenChange }: RemixShee
         </SheetHeader>
 
         {!result ? (
-          <div className="flex-1 flex flex-col gap-3 py-4">
+          <ScrollArea className="flex-1 min-h-0">
+          <div className="flex flex-col gap-3 py-4 pr-2">
             <p className="text-sm text-muted-foreground text-center mb-2">
               Transform this post into something new
             </p>
@@ -150,6 +151,7 @@ const RemixSheet = ({ postId, caption, imageUrl, open, onOpenChange }: RemixShee
               3 free remixes/day • Unlimited with subscription
             </p>
           </div>
+          </ScrollArea>
         ) : (
           <div className="flex-1 flex flex-col py-4 gap-3">
             <div className="flex items-center justify-between">
