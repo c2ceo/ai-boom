@@ -34,7 +34,7 @@ serve(async (req) => {
     // TODO: Check subscription status - for now allow 3 free/day
     if (dailyCount >= 3) {
       return new Response(JSON.stringify({ error: "Daily remix limit reached (3/day). Subscribe for unlimited remixes!", limit_reached: true }), {
-        status: 429,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
