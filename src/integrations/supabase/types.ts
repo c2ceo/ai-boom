@@ -291,6 +291,44 @@ export type Database = {
         }
         Relationships: []
       }
+      remixes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          remix_type: string
+          result_text: string | null
+          result_url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          remix_type: string
+          result_text?: string | null
+          result_url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          remix_type?: string
+          result_text?: string | null
+          result_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remixes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string
@@ -331,6 +369,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_daily_remix_count: { Args: { p_user_id: string }; Returns: number }
       get_personalized_explore: {
         Args: {
           p_category?: string
