@@ -29,14 +29,20 @@ serve(async (req) => {
     const { remix_type, post_id, caption, image_url, comments } = await req.json();
 
     // Check daily remix count (3 free per day for non-subscribers)
-    const { data: countData } = await supabase.rpc("get_daily_remix_count", { p_user_id: user.id });
-    const dailyCount = countData ?? 0;
-    // TODO: Check subscription status - for now allow 3 free/day
-    if (dailyCount >= 3) {
-      return new Response(JSON.stringify({ error: "Daily remix limit reached (3/day). Subscribe for unlimited remixes!", limit_reached: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // AI-BOOM account gets unlimited free remixes
+    const UNLIMITED_USER_IDS = ["75dd469b-9f26-4f12-bd4e-c38736ed951b"];
+    const isUnlimited = UNLIMITED_USER_IDS.includes(user.id);
+
+    let dailyCount = 0;
+    if (!isUnlimited) {
+      const { data: countData } = await supabase.rpc("get_daily_remix_count", { p_user_id: user.id });
+      dailyCount = countData ?? 0;
+      if (dailyCount >= 3) {
+        return new Response(JSON.stringify({ error: "Daily remix limit reached (3/day). Subscribe for unlimited remixes!", limit_reached: true }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -226,7 +232,8 @@ Format as:
       result_url: result.url || null,
     });
 
-    return new Response(JSON.stringify({ success: true, ...result, remaining: Math.max(0, 2 - dailyCount) }), {
+    const remaining = isUnlimited ? 999 : Math.max(0, 2 - (dailyCount ?? 0));
+    return new Response(JSON.stringify({ success: true, ...result, remaining }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
