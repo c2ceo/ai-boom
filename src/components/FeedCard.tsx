@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Wand2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Wand2, Video, Music, Lightbulb, Loader2, Play, Pause, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FeedCardProps {
   post: {
@@ -39,10 +42,15 @@ interface FeedCardProps {
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onArchive?: (postId: string) => void;
-  onRemix?: (postId: string) => void;
 }
 
-const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive, onRemix }: FeedCardProps) => {
+const remixOptions = [
+  { type: "video" as const, icon: Video, label: "Video Concept", color: "text-blue-500" },
+  { type: "song" as const, icon: Music, label: "Generate Song", color: "text-pink-500" },
+  { type: "business_idea" as const, icon: Lightbulb, label: "Business Idea", color: "text-yellow-500" },
+];
+
+const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive }: FeedCardProps) => {
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
@@ -52,7 +60,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
-
+  const [remixLoading, setRemixLoading] = useState<string | null>(null);
+  const [remixResult, setRemixResult] = useState<{ type: string; text: string; url?: string } | null>(null);
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
   useEffect(() => {
     setLikesCount(post.likes_count);
     setCommentsCount(post.comments_count);
@@ -119,6 +130,43 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
     toast({ title: "Link copied!" });
+  };
+
+  const handleRemix = async (type: string) => {
+    if (!user) { toast({ title: "Sign in to remix posts" }); return; }
+    setRemixLoading(type);
+    try {
+      const { data, error } = await supabase.functions.invoke("remix-post", {
+        body: { remix_type: type, post_id: post.id, caption: post.caption, image_url: post.image_url },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: data.limit_reached ? "Daily limit reached" : "Error", description: data.error, variant: "destructive" });
+        return;
+      }
+      setRemixResult({ type, text: data.text, url: data.url });
+      if (data.remaining !== undefined) {
+        toast({ title: "Remix created! ✨", description: `${data.remaining} free remixes remaining today` });
+      }
+    } catch (err: any) {
+      toast({ title: "Remix failed", description: err.message, variant: "destructive" });
+    } finally {
+      setRemixLoading(null);
+    }
+  };
+
+  const togglePlay = () => {
+    if (!remixResult?.url) return;
+    if (audioRef) {
+      if (playing) { audioRef.pause(); setPlaying(false); }
+      else { audioRef.play(); setPlaying(true); }
+    } else {
+      const audio = new Audio(remixResult.url);
+      audio.onended = () => setPlaying(false);
+      audio.play();
+      setPlaying(true);
+      setAudioRef(audio);
+    }
   };
 
   return (
@@ -217,10 +265,30 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               <MessageCircle className="h-6 w-6 text-foreground" />
               <span className="text-xs text-muted-foreground">{commentsCount}</span>
             </button>
-            <button onClick={() => onRemix?.(post.id)} className="flex flex-col items-center gap-0.5">
-              <Wand2 className="h-5 w-5 text-primary" />
-              <span className="text-[10px] text-primary font-medium">Remix</span>
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex flex-col items-center gap-0.5">
+                  {remixLoading ? <Loader2 className="h-5 w-5 text-primary animate-spin" /> : <Wand2 className="h-5 w-5 text-primary" />}
+                  <span className="text-[10px] text-primary font-medium">Remix</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover z-50 min-w-[180px]">
+                {remixOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={option.type}
+                      onClick={() => handleRemix(option.type)}
+                      disabled={!!remixLoading}
+                      className="gap-2"
+                    >
+                      <Icon className={`h-4 w-4 ${option.color}`} />
+                      {option.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
@@ -250,6 +318,30 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           </div>
         </div>
       </div>
+
+      {/* Remix result dialog */}
+      <Dialog open={!!remixResult} onOpenChange={(open) => { if (!open) { setRemixResult(null); audioRef?.pause(); setPlaying(false); setAudioRef(null); } }}>
+        <DialogContent className="max-w-md max-h-[70vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              {remixResult?.type === "video" && "🎬 Video Concept"}
+              {remixResult?.type === "song" && "🎵 AI Song"}
+              {remixResult?.type === "business_idea" && "💡 Business Idea"}
+            </DialogTitle>
+          </DialogHeader>
+          {remixResult?.url && (
+            <Button onClick={togglePlay} variant="outline" className="w-full gap-2">
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {playing ? "Pause" : "Play AI Track"}
+            </Button>
+          )}
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-foreground/90 text-sm pr-2">
+              {remixResult?.text}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
