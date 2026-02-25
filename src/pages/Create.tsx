@@ -227,18 +227,41 @@ const Create = () => {
         <TabsContent value="generate">
           <Card className="bg-card/50 mb-4">
             <CardContent className="p-4 space-y-3">
-              <Textarea
-                placeholder="Describe the image you want to generate..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={3}
-              />
-              <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2">
-                <Sparkles className="h-4 w-4" />
-                {generating ? "Generating..." : "Generate Image"}
-              </Button>
-              {generatedImage && (
-                <img src={generatedImage} alt="Generated" className="w-full rounded-lg max-h-80 object-cover" />
+              {generatedImage ? (
+                <>
+                  <div className="relative">
+                    <img src={generatedImage} alt="Generated" className="w-full rounded-lg max-h-80 object-cover" />
+                    <button
+                      onClick={() => { setGeneratedImage(null); }}
+                      className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Textarea
+                    placeholder="Edit your prompt and regenerate..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    rows={2}
+                  />
+                  <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2" variant="secondary">
+                    <Sparkles className="h-4 w-4" />
+                    {generating ? "Regenerating..." : "Edit & Regenerate"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Textarea
+                    placeholder="Describe the image you want to generate..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    rows={3}
+                  />
+                  <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    {generating ? "Generating..." : "Generate Image"}
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>
