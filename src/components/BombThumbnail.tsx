@@ -183,9 +183,10 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
           {videoUrl ? (
             <div className="relative h-full w-full">
               <video
-                src={videoUrl}
+                src={`${videoUrl}#t=0.1`}
                 className="h-full w-full object-cover"
                 muted
+                playsInline
                 preload="metadata"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
