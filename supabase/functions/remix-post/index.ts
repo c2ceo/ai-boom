@@ -7,6 +7,33 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function analyzeImage(imageUrl: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this image in rich detail: subject, style, colors, mood, composition, artistic elements. Be vivid and specific in 3-4 sentences." },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        }],
+      }),
+    });
+    if (!response.ok) return "AI-generated digital artwork";
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "AI-generated digital artwork";
+  } catch {
+    return "AI-generated digital artwork";
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -26,10 +53,9 @@ serve(async (req) => {
       });
     }
 
-    const { remix_type, post_id, caption, image_url, comments } = await req.json();
+    const { remix_type, post_id, caption, image_url, comments, custom_prompt } = await req.json();
 
-    // Check daily remix count (3 free per day for non-subscribers)
-    // AI-BOOM account gets unlimited free remixes
+    // Check daily remix count
     const UNLIMITED_USER_IDS = ["75dd469b-9f26-4f12-bd4e-c38736ed951b"];
     const isUnlimited = UNLIMITED_USER_IDS.includes(user.id);
 
@@ -48,13 +74,20 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    // Analyze the image if available
+    let imageDescription = "AI-generated digital artwork";
+    if (image_url) {
+      imageDescription = await analyzeImage(image_url, LOVABLE_API_KEY);
+    }
+
+    const customNote = custom_prompt ? `\n\nUser's custom direction: "${custom_prompt}"` : "";
     let result: any = {};
 
     if (remix_type === "business_idea") {
       const prompt = `You are a creative business strategist. Based on this AI-generated artwork/content, generate a compelling business idea.
 
 Post caption: "${caption || "No caption"}"
-Image description: This is an AI-generated image posted on a creative platform.
+Image analysis: ${imageDescription}${customNote}
 
 Generate a business idea that could be built around this type of content. Include:
 1. Business Name (creative and catchy)
@@ -79,8 +112,8 @@ Be creative, specific, and actionable. Format with clear headings.`;
 
       if (!aiResponse.ok) {
         const status = aiResponse.status;
-        if (status === 429) return new Response(JSON.stringify({ error: "AI rate limit reached. Try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 429) return new Response(JSON.stringify({ error: "AI rate limit reached. Try again shortly." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw new Error(`AI gateway error: ${status}`);
       }
 
@@ -91,6 +124,7 @@ Be creative, specific, and actionable. Format with clear headings.`;
       const prompt = `You are a creative director. Based on this AI artwork, create a detailed video concept/storyboard.
 
 Post caption: "${caption || "No caption"}"
+Image analysis: ${imageDescription}${customNote}
 
 Create a compelling 30-second video concept including:
 1. 🎬 Video Title
@@ -115,7 +149,7 @@ Make it cinematic, creative, and something that would go viral on social media.`
 
       if (!aiResponse.ok) {
         const status = aiResponse.status;
-        if (status === 429) return new Response(JSON.stringify({ error: "AI rate limit reached." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (status === 429) return new Response(JSON.stringify({ error: "AI rate limit reached." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         throw new Error(`AI gateway error: ${status}`);
       }
 
@@ -123,11 +157,14 @@ Make it cinematic, creative, and something that would go viral on social media.`
       result = { text: aiData.choices?.[0]?.message?.content || "No result" };
 
     } else if (remix_type === "song") {
-      // Generate song concept with AI, then generate music with ElevenLabs
       const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
       if (!ELEVENLABS_API_KEY) throw new Error("ElevenLabs not configured");
 
-      // First get a music prompt from AI
+      // Use image analysis + custom prompt for better music generation
+      const musicPromptInput = custom_prompt
+        ? `Based on this image: "${imageDescription}" and user direction: "${custom_prompt}", write a short vivid music generation prompt (max 50 words) describing genre, mood, instruments, and tempo. Only return the prompt.`
+        : `Based on this AI artwork: "${imageDescription}" with caption "${caption || "abstract digital art"}", write a short, vivid music generation prompt (max 50 words) describing genre, mood, instruments, and tempo. Only return the prompt, nothing else.`;
+
       const promptResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -136,10 +173,7 @@ Make it cinematic, creative, and something that would go viral on social media.`
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash-lite",
-          messages: [{
-            role: "user",
-            content: `Based on this AI artwork caption: "${caption || "abstract digital art"}", write a short, vivid music generation prompt (max 50 words) describing genre, mood, instruments, and tempo. Only return the prompt, nothing else.`,
-          }],
+          messages: [{ role: "user", content: musicPromptInput }],
         }),
       });
 
@@ -149,7 +183,6 @@ Make it cinematic, creative, and something that would go viral on social media.`
         musicPrompt = promptData.choices?.[0]?.message?.content || musicPrompt;
       }
 
-      // Generate music with ElevenLabs
       const musicResponse = await fetch("https://api.elevenlabs.io/v1/music", {
         method: "POST",
         headers: {
@@ -168,7 +201,6 @@ Make it cinematic, creative, and something that would go viral on social media.`
 
       const audioBuffer = await musicResponse.arrayBuffer();
 
-      // Upload to storage
       const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const filename = `remixes/${user.id}/${Date.now()}.mp3`;
       const { error: uploadError } = await serviceClient.storage
