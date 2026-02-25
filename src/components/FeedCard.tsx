@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye } from "lucide-react";
+import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Wand2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,9 +39,10 @@ interface FeedCardProps {
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onArchive?: (postId: string) => void;
+  onRemix?: (postId: string) => void;
 }
 
-const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive }: FeedCardProps) => {
+const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive, onRemix }: FeedCardProps) => {
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
@@ -215,6 +216,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <button onClick={() => { if (!user) { toast({ title: "You must sign in to comment" }); return; } onComment?.(post.id); }} className="flex flex-col items-center gap-0.5">
               <MessageCircle className="h-6 w-6 text-foreground" />
               <span className="text-xs text-muted-foreground">{commentsCount}</span>
+            </button>
+            <button onClick={() => onRemix?.(post.id)} className="flex flex-col items-center gap-0.5">
+              <Wand2 className="h-5 w-5 text-primary" />
+              <span className="text-[10px] text-primary font-medium">Remix</span>
             </button>
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
