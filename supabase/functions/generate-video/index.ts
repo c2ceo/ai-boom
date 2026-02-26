@@ -17,6 +17,39 @@ serve(async (req) => {
 
     const { action, prompt, image_url, request_id, model } = await req.json();
 
+    // For submit action, authenticate and deduct credits (40 credits = $2)
+    if (action === "submit") {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("Authentication required");
+      const token = authHeader.replace("Bearer ", "");
+      const { data: authData } = await anonClient.auth.getUser(token);
+      const userId = authData.user?.id;
+      if (!userId) throw new Error("User not authenticated");
+
+      const { data: credits } = await supabase
+        .from("fal_credits")
+        .select("credits_remaining")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!credits || credits.credits_remaining < 40) {
+        return new Response(JSON.stringify({ error: "Not enough credits. Video generation costs 40 credits ($2). Purchase more credits to continue.", needs_credits: true }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      await supabase
+        .from("fal_credits")
+        .update({ credits_remaining: credits.credits_remaining - 40, updated_at: new Date().toISOString() })
+        .eq("user_id", userId);
+    }
+
     const videoModel = model || (image_url ? "fal-ai/minimax-video/image-to-video" : "fal-ai/minimax-video");
 
     if (action === "submit") {
