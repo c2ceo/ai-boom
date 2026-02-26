@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.remix-post]
 verify_jwt = false
+
+[functions.evolve-post]
+verify_jwt = false
