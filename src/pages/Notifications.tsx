@@ -181,6 +181,7 @@ const Notifications = () => {
                       <Button
                         size="sm"
                         variant="outline"
+                        className="border-border text-foreground"
                         onClick={() => handleDeclineFollow(notif)}
                         disabled={processingRequests.has(notif.id)}
                       >
