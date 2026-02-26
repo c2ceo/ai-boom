@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Flag, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Wand2, Video, Music, Lightbulb, Loader2, Play, Pause, X, RotateCcw } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,10 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 
 interface FeedCardProps {
   post: {
@@ -45,12 +41,6 @@ interface FeedCardProps {
   onArchive?: (postId: string) => void;
 }
 
-const remixOptions = [
-  { type: "video" as const, icon: Video, label: "Video Concept", color: "text-blue-500" },
-  { type: "song" as const, icon: Music, label: "Generate Song", color: "text-pink-500" },
-  { type: "business_idea" as const, icon: Lightbulb, label: "Business Idea", color: "text-yellow-500" },
-];
-
 const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive }: FeedCardProps) => {
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
@@ -61,19 +51,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
-
-  // Remix state
-  const [remixLoading, setRemixLoading] = useState<string | null>(null);
-  const [remixResult, setRemixResult] = useState<{ type: string; text: string; url?: string } | null>(null);
-  const [remixDialogOpen, setRemixDialogOpen] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState("");
-  const [selectedRemixType, setSelectedRemixType] = useState<string | null>(null);
-
-  // Inline audio player state
-  const [inlineAudioUrl, setInlineAudioUrl] = useState<string | null>(null);
-  const [inlinePlaying, setInlinePlaying] = useState(false);
-  const [showRemixOverlay, setShowRemixOverlay] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setLikesCount(post.likes_count);
@@ -104,14 +81,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [post.id]);
-
-  // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      audioRef.current?.pause();
-      audioRef.current = null;
-    };
-  }, []);
 
   const handleDoubleTap = async () => {
     if (!user) { toast({ title: "You must sign in to like" }); return; }
@@ -148,83 +117,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
     toast({ title: "Link copied!" });
-  };
-
-  const openRemixPrompt = (type: string) => {
-    if (!user) { toast({ title: "Sign in to remix posts" }); return; }
-    setSelectedRemixType(type);
-    setCustomPrompt("");
-    setRemixDialogOpen(true);
-  };
-
-  const handleRemix = async () => {
-    if (!selectedRemixType || !user) return;
-    setRemixDialogOpen(false);
-    setRemixLoading(selectedRemixType);
-    try {
-      const { data, error } = await supabase.functions.invoke("remix-post", {
-        body: {
-          remix_type: selectedRemixType,
-          post_id: post.id,
-          caption: post.caption,
-          image_url: post.image_url,
-          custom_prompt: customPrompt || undefined,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) {
-        toast({ title: data.limit_reached ? "Daily limit reached" : "Error", description: data.error, variant: "destructive" });
-        return;
-      }
-
-      // For songs, set up inline player overlay
-      if (selectedRemixType === "song" && data.url) {
-        setInlineAudioUrl(data.url);
-        setShowRemixOverlay(true);
-        // Auto-play
-        const audio = new Audio(data.url);
-        audio.onended = () => setInlinePlaying(false);
-        audio.play();
-        setInlinePlaying(true);
-        audioRef.current = audio;
-      }
-
-      setRemixResult({ type: selectedRemixType, text: data.text, url: data.url });
-
-      if (data.remaining !== undefined) {
-        toast({ title: "Remix created! ✨", description: `${data.remaining} free remixes remaining today` });
-      }
-    } catch (err: any) {
-      toast({ title: "Remix failed", description: err.message, variant: "destructive" });
-    } finally {
-      setRemixLoading(null);
-    }
-  };
-
-  const toggleInlinePlay = () => {
-    if (!audioRef.current) return;
-    if (inlinePlaying) {
-      audioRef.current.pause();
-      setInlinePlaying(false);
-    } else {
-      audioRef.current.play();
-      setInlinePlaying(true);
-    }
-  };
-
-  const revertToOriginal = () => {
-    audioRef.current?.pause();
-    setInlinePlaying(false);
-    setShowRemixOverlay(false);
-  };
-
-  const showRemixed = () => {
-    setShowRemixOverlay(true);
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setInlinePlaying(true);
-    }
   };
 
   return (
@@ -279,72 +171,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <Verified className="h-4 w-4 text-primary" />
           )}
         </div>
-
-        {/* Inline Song Remix Overlay */}
-        <AnimatePresence>
-          {showRemixOverlay && inlineAudioUrl && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4"
-            >
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleInlinePlay(); }}
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
-                >
-                  {inlinePlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-semibold truncate">🎵 AI Remix</p>
-                  <p className="text-white/70 text-xs truncate">Tap to play/pause</p>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); revertToOriginal(); }}
-                  className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-                  title="Revert to original"
-                >
-                  <RotateCcw className="h-4 w-4 text-white" />
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setRemixResult(prev => prev ? { ...prev } : null); }}
-                  className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-                  title="View details"
-                >
-                  <Eye className="h-4 w-4 text-white" />
-                </button>
-              </div>
-              {/* Audio visualizer bar */}
-              <div className="flex items-end gap-0.5 mt-2 h-4">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="flex-1 bg-primary/80 rounded-full"
-                    animate={inlinePlaying ? {
-                      height: [4, Math.random() * 16 + 4, 4],
-                    } : { height: 4 }}
-                    transition={inlinePlaying ? {
-                      repeat: Infinity,
-                      duration: 0.4 + Math.random() * 0.4,
-                      delay: Math.random() * 0.2,
-                    } : {}}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Reverted state - show "back to remix" badge */}
-        {inlineAudioUrl && !showRemixOverlay && (
-          <button
-            onClick={(e) => { e.stopPropagation(); showRemixed(); }}
-            className="absolute bottom-3 left-3 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5"
-          >
-            <Music className="h-3 w-3" /> Play Remix
-          </button>
-        )}
       </div>
 
       {/* Info section below the post */}
@@ -389,30 +215,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               <MessageCircle className="h-6 w-6 text-foreground" />
               <span className="text-xs text-muted-foreground">{commentsCount}</span>
             </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex flex-col items-center gap-0.5">
-                  {remixLoading ? <Loader2 className="h-5 w-5 text-primary animate-spin" /> : <Wand2 className="h-5 w-5 text-primary" />}
-                  <span className="text-[10px] text-primary font-medium">Remix</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover z-50 min-w-[180px]">
-                {remixOptions.map((option) => {
-                  const Icon = option.icon;
-                  return (
-                    <DropdownMenuItem
-                      key={option.type}
-                      onClick={() => openRemixPrompt(option.type)}
-                      disabled={!!remixLoading}
-                      className="gap-2"
-                    >
-                      <Icon className={`h-4 w-4 ${option.color}`} />
-                      {option.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
@@ -442,59 +244,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           </div>
         </div>
       </div>
-
-      {/* Custom Prompt Dialog */}
-      <Dialog open={remixDialogOpen} onOpenChange={setRemixDialogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedRemixType === "video" && <><Video className="h-5 w-5 text-blue-500" /> Video Concept</>}
-              {selectedRemixType === "song" && <><Music className="h-5 w-5 text-pink-500" /> Generate Song</>}
-              {selectedRemixType === "business_idea" && <><Lightbulb className="h-5 w-5 text-yellow-500" /> Business Idea</>}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              AI will analyze the post image to create your remix. Add a custom prompt to guide the result (optional).
-            </p>
-            <Textarea
-              placeholder={
-                selectedRemixType === "song" ? "e.g. Make it jazzy with piano and saxophone..."
-                : selectedRemixType === "video" ? "e.g. Slow-mo cinematic with dramatic lighting..."
-                : "e.g. Focus on sustainability and eco-friendly market..."
-              }
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRemixDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleRemix} disabled={!!remixLoading}>
-              {remixLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
-              Generate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Remix Result Dialog (for video/business_idea text results) */}
-      <Dialog open={!!remixResult && remixResult.type !== "song"} onOpenChange={(open) => { if (!open) setRemixResult(null); }}>
-        <DialogContent className="max-w-md max-h-[70vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>
-              {remixResult?.type === "video" && "🎬 Video Concept"}
-              {remixResult?.type === "business_idea" && "💡 Business Idea"}
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-foreground/90 text-sm pr-2">
-              {remixResult?.text}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
