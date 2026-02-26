@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN allow_evolve BOOLEAN NOT NULL DEFAULT true;
