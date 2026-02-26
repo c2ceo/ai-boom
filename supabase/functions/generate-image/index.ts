@@ -15,6 +15,15 @@ serve(async (req) => {
     const { prompt } = await req.json();
     if (!prompt) throw new Error("Prompt is required");
 
+    // Check for explicit/NSFW content in prompt
+    const nsfwPatterns = /\b(nude|naked|nsfw|porn|xxx|hentai|erotic|sexual|genitalia|explicit|uncensored|topless|bottomless|intercourse|orgasm|masturbat|fetish|bondage|bdsm)\b/i;
+    if (nsfwPatterns.test(prompt)) {
+      return new Response(JSON.stringify({ error: "Explicit content generation is prohibited on AI-BOOM", explicit_blocked: true }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -85,11 +94,7 @@ serve(async (req) => {
         .eq("user_id", userId);
     }
 
-    // Deduct one credit
-    await supabase
-      .from("fal_credits")
-      .update({ credits_remaining: credits.credits_remaining - 1, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
+    // Generate image with fal.ai FLUX
 
     // Generate image with fal.ai FLUX
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
