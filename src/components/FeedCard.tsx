@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +48,8 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
+  const [evolving, setEvolving] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
@@ -119,6 +121,31 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     toast({ title: "Link copied!" });
   };
 
+  const handleEvolve = async () => {
+    if (!user) { toast({ title: "Sign in to evolve posts" }); return; }
+    if (post.video_url) { toast({ title: "Video evolution coming soon!", description: "Only images can be evolved right now." }); return; }
+    setEvolving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("evolve-post", {
+        body: { post_id: post.id },
+      });
+      if (error) throw error;
+      if (data?.needs_credits) {
+        toast({ title: "No credits remaining", description: "Purchase credits to evolve posts.", variant: "destructive" });
+        return;
+      }
+      if (data?.error) throw new Error(data.error);
+      if (data?.imageUrl) {
+        setCurrentImageUrl(data.imageUrl);
+        toast({ title: "Evolved! ⚡" });
+      }
+    } catch (error: any) {
+      toast({ title: "Evolution failed", description: error.message, variant: "destructive" });
+    } finally {
+      setEvolving(false);
+    }
+  };
+
   return (
     <div className="snap-start w-full flex flex-col items-center bg-background py-4">
       {/* Media */}
@@ -135,9 +162,9 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             autoPlay
             playsInline
           />
-        ) : post.image_url ? (
+        ) : currentImageUrl ? (
           <img
-            src={post.image_url}
+            src={currentImageUrl}
             alt={post.caption || "AI generated content"}
             className="w-full object-contain"
             loading="lazy"
@@ -217,6 +244,19 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             </button>
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
+            </button>
+            <button
+              onClick={handleEvolve}
+              disabled={evolving}
+              className="flex flex-col items-center gap-0.5"
+              title="Evolve this post"
+            >
+              {evolving ? (
+                <Loader2 className="h-5 w-5 text-primary animate-spin" />
+              ) : (
+                <Zap className="h-5 w-5 text-primary" />
+              )}
+              <span className="text-[10px] text-primary font-medium">Evolve</span>
             </button>
             {isOwner && (
               <DropdownMenu>
