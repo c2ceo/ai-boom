@@ -42,6 +42,7 @@ const Create = () => {
   const [videoPrompt, setVideoPrompt] = useState("");
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [generatingVideo, setGeneratingVideo] = useState(false);
+  const [videoStatus, setVideoStatus] = useState<string | null>(null);
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
@@ -59,7 +60,7 @@ const Create = () => {
       .from("fal_credits")
       .select("credits_remaining")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
     setFalCredits(data?.credits_remaining ?? 0);
   }, [user]);
 
@@ -148,21 +149,54 @@ const Create = () => {
   const handleGenerateVideo = async () => {
     if (!videoPrompt.trim()) return;
     setGeneratingVideo(true);
+    setVideoStatus("Submitting...");
     try {
-      const { data, error } = await supabase.functions.invoke("generate-video", {
-        body: { prompt: videoPrompt },
+      // Step 1: Submit to queue
+      const { data: submitData, error: submitError } = await supabase.functions.invoke("generate-video", {
+        body: { action: "submit", prompt: videoPrompt },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.videoUrl) {
-        setGeneratedVideo(data.videoUrl);
-        setCategory("ai-video");
-        toast({ title: "Video generated! 🎬" });
+      if (submitError) throw submitError;
+      if (submitData?.error) throw new Error(submitData.error);
+
+      const reqId = submitData.request_id;
+      if (!reqId) throw new Error("No request_id returned");
+
+      // Step 2: Poll for completion
+      setVideoStatus("Generating video...");
+      const maxAttempts = 60;
+      const pollInterval = 5000;
+
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise((r) => setTimeout(r, pollInterval));
+        setVideoStatus(`Generating video... (${Math.floor((i + 1) * pollInterval / 1000)}s)`);
+
+        const { data: pollData, error: pollError } = await supabase.functions.invoke("generate-video", {
+          body: { action: "poll", request_id: reqId },
+        });
+
+        if (pollError) continue;
+        if (pollData?.error) throw new Error(pollData.error);
+
+        if (pollData?.status === "COMPLETED" && pollData?.videoUrl) {
+          setGeneratedVideo(pollData.videoUrl);
+          setCategory("ai-video");
+          toast({ title: "Video generated! 🎬" });
+          setVideoStatus(null);
+          setGeneratingVideo(false);
+          return;
+        }
+
+        if (pollData?.status === "FAILED") {
+          throw new Error("Video generation failed on the server");
+        }
       }
+
+      throw new Error("Video generation timed out after 5 minutes");
     } catch (error: any) {
       toast({ title: "Video generation failed", description: error.message, variant: "destructive" });
     } finally {
       setGeneratingVideo(false);
+      setVideoStatus(null);
     }
   };
 
@@ -442,11 +476,10 @@ const Create = () => {
                     rows={3}
                   />
                   <Button onClick={handleGenerateVideo} disabled={generatingVideo || !videoPrompt.trim()} className="w-full gap-2">
-                    <Video className="h-4 w-4" />
                     {generatingVideo ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Generating video (may take 1-3 min)...</>
+                      <><Loader2 className="h-4 w-4 animate-spin" /> {videoStatus || "Generating..."}</>
                     ) : (
-                      "Generate Video"
+                      <><Video className="h-4 w-4" /> Generate Video</>
                     )}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
