@@ -2,20 +2,25 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, UserPlus, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Heart, MessageCircle, UserPlus, Sparkles, UserCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const iconMap: Record<string, any> = {
   like: Heart,
   comment: MessageCircle,
   follow: UserPlus,
+  follow_request: UserCheck,
 };
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -41,16 +46,80 @@ const Notifications = () => {
         .in("user_id", actorIds);
       setProfiles(new Map(actorProfiles?.map((p) => [p.user_id, p])));
 
-      // Mark as read
+      // Mark non-follow_request notifications as read
       await supabase
         .from("notifications")
         .update({ is_read: true })
         .eq("user_id", user!.id)
-        .eq("is_read", false);
+        .eq("is_read", false)
+        .neq("type", "follow_request");
     }
 
     setNotifications(data || []);
     setLoading(false);
+  };
+
+  const handleAcceptFollow = async (notif: any) => {
+    setProcessingRequests((prev) => new Set(prev).add(notif.id));
+    try {
+      // Insert into follows
+      await supabase.from("follows").insert({
+        follower_id: notif.actor_id,
+        following_id: user!.id,
+      });
+
+      // Delete the follow request
+      await supabase
+        .from("follow_requests")
+        .delete()
+        .eq("requester_id", notif.actor_id)
+        .eq("target_id", user!.id);
+
+      // Mark notification as read
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notif.id);
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notif.id ? { ...n, is_read: true, _accepted: true } : n))
+      );
+
+      toast({ title: "Follow request accepted" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setProcessingRequests((prev) => {
+      const next = new Set(prev);
+      next.delete(notif.id);
+      return next;
+    });
+  };
+
+  const handleDeclineFollow = async (notif: any) => {
+    setProcessingRequests((prev) => new Set(prev).add(notif.id));
+    try {
+      // Delete the follow request
+      await supabase
+        .from("follow_requests")
+        .delete()
+        .eq("requester_id", notif.actor_id)
+        .eq("target_id", user!.id);
+
+      // Remove notification
+      await supabase.from("notifications").delete().eq("id", notif.id);
+
+      setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+      toast({ title: "Follow request declined" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setProcessingRequests((prev) => {
+      const next = new Set(prev);
+      next.delete(notif.id);
+      return next;
+    });
   };
 
   if (loading) {
@@ -75,6 +144,9 @@ const Notifications = () => {
           {notifications.map((notif) => {
             const actor = profiles.get(notif.actor_id);
             const Icon = iconMap[notif.type] || Sparkles;
+            const isFollowRequest = notif.type === "follow_request" && !notif.is_read && !notif._accepted;
+            const isAccepted = notif._accepted;
+
             return (
               <div
                 key={notif.id}
@@ -92,10 +164,33 @@ const Notifications = () => {
                     {notif.type === "like" && "liked your post"}
                     {notif.type === "comment" && "commented on your post"}
                     {notif.type === "follow" && "started following you"}
+                    {notif.type === "follow_request" && "requested to follow you"}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                   </p>
+                  {isFollowRequest && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleAcceptFollow(notif)}
+                        disabled={processingRequests.has(notif.id)}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeclineFollow(notif)}
+                        disabled={processingRequests.has(notif.id)}
+                      >
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                  {isAccepted && (
+                    <p className="text-xs text-primary mt-1 font-medium">Accepted</p>
+                  )}
                 </div>
                 <Icon className="h-5 w-5 text-muted-foreground shrink-0" />
               </div>

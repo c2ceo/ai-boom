@@ -80,6 +80,30 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_requests: {
+        Row: {
+          created_at: string
+          id: string
+          requester_id: string
+          status: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
