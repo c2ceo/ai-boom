@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const aiTools = ["Midjourney", "DALL-E", "Stable Diffusion", "Firefly", "Leonardo", "Other"];
+const aiTools: string[] = []; // kept for potential future use
 const categories = [
   { value: "ai-art", label: "AI Art" },
   { value: "ai-photography", label: "AI Photography" },
@@ -336,16 +336,11 @@ const Create = () => {
 
           <div className="space-y-2 mb-4">
             <Label>AI Tool Used *</Label>
-            <Select value={aiTool} onValueChange={setAiTool}>
-              <SelectTrigger>
-                <SelectValue placeholder="Which AI tool made this?" />
-              </SelectTrigger>
-              <SelectContent>
-                {aiTools.map((tool) => (
-                  <SelectItem key={tool} value={tool.toLowerCase()}>{tool}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              placeholder="e.g. Midjourney, DALL-E, Stable Diffusion..."
+              value={aiTool}
+              onChange={(e) => setAiTool(e.target.value)}
+            />
           </div>
         </TabsContent>
 
