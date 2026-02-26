@@ -36,6 +36,7 @@ const Create = () => {
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
+  const [imageProvider, setImageProvider] = useState<"gemini" | "fal">("gemini");
 
   // Video generation state
   const [videoPrompt, setVideoPrompt] = useState("");
@@ -69,7 +70,7 @@ const Create = () => {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-image", {
-        body: { prompt },
+        body: { prompt, provider: imageProvider },
       });
       if (error) throw error;
       if (data?.imageUrl) {
@@ -280,6 +281,26 @@ const Create = () => {
                 </>
               ) : (
                 <>
+                  <div className="flex gap-2 mb-1">
+                    <Button
+                      type="button"
+                      variant={imageProvider === "gemini" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setImageProvider("gemini")}
+                      className="flex-1 gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Gemini
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={imageProvider === "fal" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setImageProvider("fal")}
+                      className="flex-1 gap-1.5"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" /> FLUX (fal.ai)
+                    </Button>
+                  </div>
                   <Textarea
                     placeholder="Describe the image you want to generate..."
                     value={prompt}
@@ -288,7 +309,7 @@ const Create = () => {
                   />
                   <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2">
                     <Sparkles className="h-4 w-4" />
-                    {generating ? "Generating..." : "Generate Image"}
+                    {generating ? "Generating..." : `Generate with ${imageProvider === "gemini" ? "Gemini" : "FLUX"}`}
                   </Button>
                 </>
               )}
