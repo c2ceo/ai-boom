@@ -60,18 +60,11 @@ const Home = () => {
   }, [user, familyFriendly]);
 
   const fetchPosts = async () => {
-    let query = supabase
-      .from("posts")
-      .select("*")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (familyFriendly) {
-      query = query.eq("is_family_friendly", true);
-    }
-
-    const { data: postsData } = await query;
+    const { data: postsData } = await supabase.rpc("get_personalized_explore", {
+      p_user_id: user?.id ?? undefined,
+      p_family_friendly: familyFriendly,
+      p_limit: 50,
+    });
 
     if (postsData && postsData.length > 0) {
       // Fetch profiles for all post user_ids
