@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban, Lock } from "lucide-react";
 import BombThumbnail from "@/components/BombThumbnail";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
@@ -44,7 +44,8 @@ const Profile = () => {
   const [deleting, setDeleting] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following">("followers");
   const [showFollowList, setShowFollowList] = useState(false);
-  
+  const [followRequestPending, setFollowRequestPending] = useState(false);
+  const [isPrivateAndNotFollowing, setIsPrivateAndNotFollowing] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -98,15 +99,7 @@ const Profile = () => {
 
     setProfile(profileData);
 
-    const { data: postsData } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("user_id", targetUserId!)
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
-
-    setPosts(postsData || []);
-
+    let following = false;
     if (user && !isOwnProfile) {
       const { data: follow } = await supabase
         .from("follows")
@@ -114,7 +107,34 @@ const Profile = () => {
         .eq("follower_id", user.id)
         .eq("following_id", targetUserId!)
         .maybeSingle();
-      setIsFollowing(!!follow);
+      following = !!follow;
+      setIsFollowing(following);
+
+      // Check for pending follow request
+      const { data: req } = await supabase
+        .from("follow_requests")
+        .select("id")
+        .eq("requester_id", user.id)
+        .eq("target_id", targetUserId!)
+        .eq("status", "pending")
+        .maybeSingle();
+      setFollowRequestPending(!!req);
+    }
+
+    // If private and not owner and not following, hide posts
+    const isPrivate = profileData?.is_private && !isOwnProfile && !following;
+    setIsPrivateAndNotFollowing(!!isPrivate);
+
+    if (!isPrivate) {
+      const { data: postsData } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("user_id", targetUserId!)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      setPosts(postsData || []);
+    } else {
+      setPosts([]);
     }
 
     setLoading(false);
@@ -124,15 +144,33 @@ const Profile = () => {
     if (!user || !targetUserId) return;
 
     if (isFollowing) {
+      // Unfollow
       setIsFollowing(false);
       setProfile((prev: any) => prev ? { ...prev, followers_count: Math.max(0, (prev.followers_count || 0) - 1) } : prev);
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
-      // DB trigger automatically recounts both profiles
+    } else if (profile?.is_private) {
+      // Send follow request for private accounts
+      if (followRequestPending) {
+        // Cancel request
+        await supabase.from("follow_requests").delete().eq("requester_id", user.id).eq("target_id", targetUserId);
+        setFollowRequestPending(false);
+        toast({ title: "Follow request cancelled" });
+      } else {
+        await supabase.from("follow_requests").insert({ requester_id: user.id, target_id: targetUserId });
+        // Create notification for the target user
+        await supabase.from("notifications").insert({
+          user_id: targetUserId,
+          actor_id: user.id,
+          type: "follow_request",
+        });
+        setFollowRequestPending(true);
+        toast({ title: "Follow request sent" });
+      }
     } else {
+      // Instant follow for public accounts
       setIsFollowing(true);
       setProfile((prev: any) => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : prev);
       await supabase.from("follows").insert({ follower_id: user.id, following_id: targetUserId });
-      // DB trigger automatically recounts both profiles
     }
   };
 
@@ -278,6 +316,10 @@ const Profile = () => {
               <Button variant="secondary" className="flex-1" onClick={handleFollow}>
                 Following
               </Button>
+            ) : followRequestPending ? (
+              <Button variant="outline" className="flex-1" onClick={handleFollow}>
+                Requested
+              </Button>
             ) : (
               <Button className="flex-1" onClick={handleFollow}>
                 Follow
@@ -340,7 +382,13 @@ const Profile = () => {
             )
           )}
         </div>
-        {posts.length === 0 ? (
+        {isPrivateAndNotFollowing ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+            <Lock className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="font-semibold">This account is private</p>
+            <p className="text-sm text-muted-foreground mt-1">Follow this account to see their posts</p>
+          </div>
+        ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center px-6">
             <Sparkles className="h-10 w-10 text-muted-foreground mb-3" />
             <p className="text-muted-foreground">No posts yet</p>
