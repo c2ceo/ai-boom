@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, provider = "gemini" } = await req.json();
+    const { prompt } = await req.json();
     if (!prompt) throw new Error("Prompt is required");
 
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -20,119 +20,60 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // For fal provider, check and deduct credits
-    if (provider === "fal") {
-      // Get user from auth header
-      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader) throw new Error("Authentication required for fal.ai generation");
-      const token = authHeader.replace("Bearer ", "");
-      const { data: authData } = await anonClient.auth.getUser(token);
-      const userId = authData.user?.id;
-      if (!userId) throw new Error("User not authenticated");
+    // Authenticate user and check credits
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Authentication required");
+    const token = authHeader.replace("Bearer ", "");
+    const { data: authData } = await anonClient.auth.getUser(token);
+    const userId = authData.user?.id;
+    if (!userId) throw new Error("User not authenticated");
 
-      const { data: credits } = await supabase
-        .from("fal_credits")
-        .select("credits_remaining")
-        .eq("user_id", userId)
-        .single();
+    const { data: credits } = await supabase
+      .from("fal_credits")
+      .select("credits_remaining")
+      .eq("user_id", userId)
+      .single();
 
-      if (!credits || credits.credits_remaining <= 0) {
-        return new Response(JSON.stringify({ error: "No fal.ai credits remaining. Purchase credits to continue.", needs_credits: true }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Deduct one credit
-      await supabase
-        .from("fal_credits")
-        .update({ credits_remaining: credits.credits_remaining - 1, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
+    if (!credits || credits.credits_remaining <= 0) {
+      return new Response(JSON.stringify({ error: "No credits remaining. Purchase credits to continue.", needs_credits: true }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    let imageBytes: Uint8Array;
-    let contentType = "image/png";
+    // Deduct one credit
+    await supabase
+      .from("fal_credits")
+      .update({ credits_remaining: credits.credits_remaining - 1, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
 
-    if (provider === "fal") {
-      // fal.ai FLUX image generation
-      const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
-      if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
+    // Generate image with fal.ai FLUX
+    const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
+    if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
-      const falRes = await fetch("https://fal.run/fal-ai/flux/dev", {
-        method: "POST",
-        headers: {
-          Authorization: `Key ${FAL_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
-          image_size: "landscape_16_9",
-          num_images: 1,
-        }),
-      });
+    const falRes = await fetch("https://fal.run/fal-ai/flux/dev", {
+      method: "POST",
+      headers: {
+        Authorization: `Key ${FAL_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt, image_size: "landscape_16_9", num_images: 1 }),
+    });
 
-      if (!falRes.ok) {
-        const errText = await falRes.text();
-        console.error("fal.ai error:", falRes.status, errText);
-        throw new Error(`fal.ai generation failed (${falRes.status})`);
-      }
-
-      const falData = await falRes.json();
-      const imageUrl = falData.images?.[0]?.url;
-      if (!imageUrl) throw new Error("No image returned from fal.ai");
-
-      // Download the image
-      const downloadRes = await fetch(imageUrl);
-      imageBytes = new Uint8Array(await downloadRes.arrayBuffer());
-      contentType = downloadRes.headers.get("content-type") || "image/png";
-
-    } else {
-      // Gemini image generation (default)
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [
-            {
-              role: "user",
-              content: `Generate a high-quality AI art image based on this description: ${prompt}. Make it visually stunning, creative, and suitable for a social media post. Ultra high resolution.`,
-            },
-          ],
-          modalities: ["image", "text"],
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (response.status === 402) {
-          return new Response(JSON.stringify({ error: "Usage limit reached. Please add credits." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        const text = await response.text();
-        console.error("AI gateway error:", response.status, text);
-        throw new Error("AI generation failed");
-      }
-
-      const data = await response.json();
-      const base64Url = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-      if (!base64Url) throw new Error("No image was generated");
-
-      const base64Data = base64Url.replace(/^data:image\/\w+;base64,/, "");
-      imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+    if (!falRes.ok) {
+      const errText = await falRes.text();
+      console.error("fal.ai error:", falRes.status, errText);
+      throw new Error(`Image generation failed (${falRes.status})`);
     }
+
+    const falData = await falRes.json();
+    const imageUrl = falData.images?.[0]?.url;
+    if (!imageUrl) throw new Error("No image returned");
+
+    const downloadRes = await fetch(imageUrl);
+    const imageBytes = new Uint8Array(await downloadRes.arrayBuffer());
+    const contentType = downloadRes.headers.get("content-type") || "image/png";
 
     // Upload to storage
     const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
