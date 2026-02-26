@@ -101,51 +101,45 @@ serve(async (req) => {
         .eq("user_id", userId);
     }
 
-    // Call Lovable AI (Gemini) to evolve the image
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    // Use fal.ai Luma Photon to evolve the image
+    const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
+    if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
-    const evolvePrompt = `Evolve this AI-generated image into something more extraordinary. Enhance it dramatically: amplify colors, add more intricate details, increase visual complexity, make it more surreal and dreamlike. Keep the core subject but push it to the next level of artistic quality. Make it feel like a higher evolution of the original.${post.caption ? ` The original concept was: ${post.caption}` : ""}`;
+    const evolvePrompt = `Evolve this image into something more extraordinary. Amplify colors, add intricate details, increase visual complexity, make it more surreal and dreamlike. Push it to the next level of artistic quality.${post.caption ? ` Original concept: ${post.caption}` : ""}`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const falRes = await fetch("https://fal.run/fal-ai/luma-photon/flash/modify", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Key ${FAL_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: evolvePrompt },
-              { type: "image_url", image_url: { url: mediaUrl } },
-            ],
-          },
-        ],
-        modalities: ["image", "text"],
+        image_url: mediaUrl,
+        prompt: evolvePrompt,
+        strength: 0.7,
       }),
     });
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error("AI evolve error:", aiRes.status, errText);
-      throw new Error(`Image evolution failed (${aiRes.status})`);
+    if (!falRes.ok) {
+      const errText = await falRes.text();
+      console.error("Luma evolve error:", falRes.status, errText);
+      throw new Error(`Image evolution failed (${falRes.status})`);
     }
 
-    const aiData = await aiRes.json();
-    const evolvedBase64 = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    if (!evolvedBase64) throw new Error("No evolved image returned");
+    const falData = await falRes.json();
+    const evolvedUrl = falData.images?.[0]?.url;
+    if (!evolvedUrl) throw new Error("No evolved image returned");
 
-    // Convert base64 to bytes and upload
-    const base64Data = evolvedBase64.replace(/^data:image\/\w+;base64,/, "");
-    const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+    // Download evolved image and upload to storage
+    const downloadRes = await fetch(evolvedUrl);
+    const imageBytes = new Uint8Array(await downloadRes.arrayBuffer());
+    const contentType = downloadRes.headers.get("content-type") || "image/png";
+    const ext = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
 
-    const fileName = `evolved/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+    const fileName = `evolved/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("media")
-      .upload(fileName, imageBytes, { contentType: "image/png" });
+      .upload(fileName, imageBytes, { contentType });
 
     if (uploadError) throw uploadError;
 
