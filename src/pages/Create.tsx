@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const aiTools = ["Midjourney", "DALL-E", "Stable Diffusion", "Firefly", "Leonardo", "Other"];
@@ -22,7 +22,7 @@ const categories = [
 ];
 
 const Create = () => {
-  const [mode, setMode] = useState<"upload" | "generate">("upload");
+  const [mode, setMode] = useState<"upload" | "generate" | "video">("upload");
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("ai-art");
   const [aiTool, setAiTool] = useState("");
@@ -36,6 +36,12 @@ const Create = () => {
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
+
+  // Video generation state
+  const [videoPrompt, setVideoPrompt] = useState("");
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
+  const [generatingVideo, setGeneratingVideo] = useState(false);
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,16 +83,39 @@ const Create = () => {
     }
   };
 
+  const handleGenerateVideo = async () => {
+    if (!videoPrompt.trim()) return;
+    setGeneratingVideo(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-video", {
+        body: { prompt: videoPrompt },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.videoUrl) {
+        setGeneratedVideo(data.videoUrl);
+        setCategory("ai-video");
+        toast({ title: "Video generated! 🎬" });
+      }
+    } catch (error: any) {
+      toast({ title: "Video generation failed", description: error.message, variant: "destructive" });
+    } finally {
+      setGeneratingVideo(false);
+    }
+  };
+
   const handlePost = async () => {
     if (!user) {
       toast({ title: "Please sign in to publish", description: "You need to be logged in to create a post.", variant: "destructive" });
       return;
     }
-    if (mode === "upload" && !file) {
-      return;
-    }
+    if (mode === "upload" && !file) return;
     if (mode === "generate" && !generatedImage) {
       toast({ title: "Please generate an image first", variant: "destructive" });
+      return;
+    }
+    if (mode === "video" && !generatedVideo) {
+      toast({ title: "Please generate a video first", variant: "destructive" });
       return;
     }
     if (mode === "upload" && !aiTool) {
@@ -96,22 +125,20 @@ const Create = () => {
 
     setLoading(true);
     try {
-      let uploadedUrl = generatedImage;
+      let uploadedUrl = mode === "video" ? generatedVideo : generatedImage;
+      const isVideo = mode === "video" || file?.type?.startsWith("video/");
 
       if (mode === "upload" && file) {
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("media")
-          .upload(path, file);
+        const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
         if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
         uploadedUrl = publicUrl;
       }
 
       // Run AI filter on uploaded images (skip for videos and in-app generated)
-      let verifiedAi = mode === "generate";
-      const isVideo = file?.type?.startsWith("video/");
+      let verifiedAi = mode === "generate" || mode === "video";
 
       if (mode === "upload" && !isVideo && uploadedUrl) {
         setChecking(true);
@@ -125,7 +152,6 @@ const Create = () => {
           }
         } catch (filterErr) {
           console.error("AI filter error:", filterErr);
-          // Allow post but mark as unverified
         } finally {
           setChecking(false);
         }
@@ -140,7 +166,7 @@ const Create = () => {
         caption,
         tags,
         category,
-        ai_tool: mode === "generate" ? "in-app" : aiTool,
+        ai_tool: mode === "generate" ? "in-app" : mode === "video" ? "fal.ai" : aiTool,
         is_verified_ai: verifiedAi,
         is_family_friendly: isFamilyFriendly,
         status: needsReview ? "pending_review" : "approved",
@@ -169,13 +195,16 @@ const Create = () => {
     <div className="min-h-screen pb-28 pt-4 px-4 text-foreground">
       <h1 className="text-2xl font-bold mb-4 text-foreground">Create Post</h1>
 
-      <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate")}>
+      <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate" | "video")}>
         <TabsList className="w-full mb-4">
           <TabsTrigger value="upload" className="flex-1 gap-2">
             <Upload className="h-4 w-4" /> Upload
           </TabsTrigger>
           <TabsTrigger value="generate" className="flex-1 gap-2">
-            <Sparkles className="h-4 w-4" /> AI Generate
+            <Sparkles className="h-4 w-4" /> AI Image
+          </TabsTrigger>
+          <TabsTrigger value="video" className="flex-1 gap-2">
+            <Video className="h-4 w-4" /> AI Video
           </TabsTrigger>
         </TabsList>
 
@@ -266,6 +295,56 @@ const Create = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="video">
+          <Card className="bg-card/50 mb-4">
+            <CardContent className="p-4 space-y-3">
+              {generatedVideo ? (
+                <>
+                  <div className="relative">
+                    <video src={generatedVideo} controls className="w-full rounded-lg max-h-80 object-cover" playsInline />
+                    <button
+                      onClick={() => setGeneratedVideo(null)}
+                      className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <Textarea
+                    placeholder="Edit your prompt and regenerate..."
+                    value={videoPrompt}
+                    onChange={(e) => setVideoPrompt(e.target.value)}
+                    rows={2}
+                  />
+                  <Button onClick={handleGenerateVideo} disabled={generatingVideo || !videoPrompt.trim()} className="w-full gap-2" variant="secondary">
+                    <Video className="h-4 w-4" />
+                    {generatingVideo ? "Regenerating..." : "Edit & Regenerate"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Textarea
+                    placeholder="Describe the video you want to create... (e.g. 'A golden sunset over calm ocean waves, cinematic slow motion')"
+                    value={videoPrompt}
+                    onChange={(e) => setVideoPrompt(e.target.value)}
+                    rows={3}
+                  />
+                  <Button onClick={handleGenerateVideo} disabled={generatingVideo || !videoPrompt.trim()} className="w-full gap-2">
+                    <Video className="h-4 w-4" />
+                    {generatingVideo ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Generating video (may take 1-3 min)...</>
+                    ) : (
+                      "Generate Video"
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Powered by fal.ai • Video generation may take 1-3 minutes
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Shared fields */}
@@ -314,7 +393,7 @@ const Create = () => {
           )}
         </div>
 
-        <Button onClick={handlePost} disabled={loading || checking} className="w-full" size="lg">
+        <Button onClick={handlePost} disabled={loading || checking || generatingVideo} className="w-full" size="lg">
           {checking ? (
             <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking AI content...</>
           ) : loading ? (
