@@ -101,6 +101,30 @@ export type Database = {
         }
         Relationships: []
       }
+      free_generations: {
+        Row: {
+          created_at: string
+          generations_used: number
+          id: string
+          month: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generations_used?: number
+          id?: string
+          month: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generations_used?: number
+          id?: string
+          month?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string

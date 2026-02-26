@@ -31,23 +31,60 @@ serve(async (req) => {
       const userId = authData.user?.id;
       if (!userId) throw new Error("User not authenticated");
 
-      const { data: credits } = await supabase
-        .from("fal_credits")
-        .select("credits_remaining")
-        .eq("user_id", userId)
-        .maybeSingle();
+      // Check if user is among first 10 accounts and has free generations this month
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const { data: allProfiles } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .order("created_at", { ascending: true })
+        .limit(10);
 
-      if (!credits || credits.credits_remaining < 40) {
-        return new Response(JSON.stringify({ error: "Not enough credits. Video generation costs 40 credits ($2). Purchase more credits to continue.", needs_credits: true }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const isEligibleForFree = allProfiles?.some((p: any) => p.user_id === userId) ?? false;
+      let usedFreeGeneration = false;
+
+      if (isEligibleForFree) {
+        const { data: freeGen } = await supabase
+          .from("free_generations")
+          .select("generations_used")
+          .eq("user_id", userId)
+          .eq("month", currentMonth)
+          .maybeSingle();
+
+        if (!freeGen || freeGen.generations_used < 3) {
+          usedFreeGeneration = true;
+          if (freeGen) {
+            await supabase
+              .from("free_generations")
+              .update({ generations_used: freeGen.generations_used + 1 })
+              .eq("user_id", userId)
+              .eq("month", currentMonth);
+          } else {
+            await supabase
+              .from("free_generations")
+              .insert({ user_id: userId, month: currentMonth, generations_used: 1 });
+          }
+        }
       }
 
-      await supabase
-        .from("fal_credits")
-        .update({ credits_remaining: credits.credits_remaining - 40, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
+      if (!usedFreeGeneration) {
+        const { data: credits } = await supabase
+          .from("fal_credits")
+          .select("credits_remaining")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!credits || credits.credits_remaining < 40) {
+          return new Response(JSON.stringify({ error: "Not enough credits. Video generation costs 40 credits ($2). Purchase more credits to continue.", needs_credits: true }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        await supabase
+          .from("fal_credits")
+          .update({ credits_remaining: credits.credits_remaining - 40, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+      }
     }
 
     const videoModel = model || (image_url ? "fal-ai/minimax-video/image-to-video" : "fal-ai/minimax-video");
