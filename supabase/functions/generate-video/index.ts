@@ -17,6 +17,17 @@ serve(async (req) => {
 
     const { action, prompt, image_url, request_id, model } = await req.json();
 
+    // Check for explicit/NSFW content in prompt
+    if (prompt) {
+      const nsfwPatterns = /\b(nude|naked|nsfw|porn|xxx|hentai|erotic|sexual|genitalia|explicit|uncensored|topless|bottomless|intercourse|orgasm|masturbat|fetish|bondage|bdsm)\b/i;
+      if (nsfwPatterns.test(prompt)) {
+        return new Response(JSON.stringify({ error: "Explicit content generation is prohibited on AI-BOOM", explicit_blocked: true }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // For submit action, authenticate and deduct credits (40 credits = $2)
     if (action === "submit") {
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
