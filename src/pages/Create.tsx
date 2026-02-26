@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const aiTools = ["Midjourney", "DALL-E", "Stable Diffusion", "Firefly", "Leonardo", "Other"];
@@ -43,9 +43,64 @@ const Create = () => {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [generatingVideo, setGeneratingVideo] = useState(false);
 
+  // Credits state
+  const [falCredits, setFalCredits] = useState<number | null>(null);
+  const [buyingCredits, setBuyingCredits] = useState(false);
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Fetch credits
+  const fetchCredits = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("fal_credits")
+      .select("credits_remaining")
+      .eq("user_id", user.id)
+      .single();
+    setFalCredits(data?.credits_remaining ?? 0);
+  }, [user]);
+
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
+
+  // Handle returning from Stripe checkout
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const purchased = searchParams.get("credits_purchased");
+    if (purchased === "true" && sessionId && user) {
+      // Verify payment and add credits
+      supabase.functions.invoke("verify-fal-payment", {
+        body: { session_id: sessionId },
+      }).then(({ data, error }) => {
+        if (!error && data?.success) {
+          toast({ title: "Credits added! 🎉", description: `${data.credits_added} fal.ai credits added to your account.` });
+          fetchCredits();
+        }
+      });
+      // Clean URL params
+      setSearchParams({});
+    }
+  }, [searchParams, user]);
+
+  const handleBuyCredits = async () => {
+    if (!user) { toast({ title: "Please sign in first" }); return; }
+    setBuyingCredits(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("buy-fal-credits");
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setBuyingCredits(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -73,9 +128,15 @@ const Create = () => {
         body: { prompt, provider: imageProvider },
       });
       if (error) throw error;
+      if (data?.needs_credits) {
+        toast({ title: "No credits remaining", description: "Purchase fal.ai credits to generate with FLUX.", variant: "destructive" });
+        return;
+      }
+      if (data?.error) throw new Error(data.error);
       if (data?.imageUrl) {
         setGeneratedImage(data.imageUrl);
         setAiTool("in-app");
+        if (imageProvider === "fal") fetchCredits(); // refresh credits count
       }
     } catch (error: any) {
       toast({ title: "Generation failed", description: error.message, variant: "destructive" });
@@ -301,16 +362,46 @@ const Create = () => {
                       <ImageIcon className="h-3.5 w-3.5" /> FLUX (fal.ai)
                     </Button>
                   </div>
+
+                  {imageProvider === "fal" && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border/50">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Coins className="h-4 w-4 text-primary" />
+                        <span className="text-muted-foreground">
+                          Credits: <span className="font-semibold text-foreground">{falCredits ?? "..."}</span>
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBuyCredits}
+                        disabled={buyingCredits}
+                        className="gap-1.5 text-xs"
+                      >
+                        {buyingCredits ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
+                        Buy 20 for $1
+                      </Button>
+                    </div>
+                  )}
+
                   <Textarea
                     placeholder="Describe the image you want to generate..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={3}
                   />
-                  <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2">
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={generating || !prompt.trim() || (imageProvider === "fal" && falCredits !== null && falCredits <= 0)}
+                    className="w-full gap-2"
+                  >
                     <Sparkles className="h-4 w-4" />
                     {generating ? "Generating..." : `Generate with ${imageProvider === "gemini" ? "Gemini" : "FLUX"}`}
                   </Button>
+                  {imageProvider === "fal" && falCredits !== null && falCredits <= 0 && (
+                    <p className="text-xs text-destructive text-center">Purchase credits to generate with FLUX</p>
+                  )}
                 </>
               )}
             </CardContent>

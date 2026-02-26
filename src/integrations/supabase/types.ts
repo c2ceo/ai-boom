@@ -56,6 +56,30 @@ export type Database = {
           },
         ]
       }
+      fal_credits: {
+        Row: {
+          credits_remaining: number
+          id: string
+          total_purchased: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_remaining?: number
+          id?: string
+          total_purchased?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_remaining?: number
+          id?: string
+          total_purchased?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string

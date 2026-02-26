@@ -20,6 +20,37 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // For fal provider, check and deduct credits
+    if (provider === "fal") {
+      // Get user from auth header
+      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("Authentication required for fal.ai generation");
+      const token = authHeader.replace("Bearer ", "");
+      const { data: authData } = await anonClient.auth.getUser(token);
+      const userId = authData.user?.id;
+      if (!userId) throw new Error("User not authenticated");
+
+      const { data: credits } = await supabase
+        .from("fal_credits")
+        .select("credits_remaining")
+        .eq("user_id", userId)
+        .single();
+
+      if (!credits || credits.credits_remaining <= 0) {
+        return new Response(JSON.stringify({ error: "No fal.ai credits remaining. Purchase credits to continue.", needs_credits: true }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Deduct one credit
+      await supabase
+        .from("fal_credits")
+        .update({ credits_remaining: credits.credits_remaining - 1, updated_at: new Date().toISOString() })
+        .eq("user_id", userId);
+    }
+
     let imageBytes: Uint8Array;
     let contentType = "image/png";
 
