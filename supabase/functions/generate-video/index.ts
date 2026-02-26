@@ -15,77 +15,73 @@ serve(async (req) => {
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
     if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
-    const { prompt, image_url } = await req.json();
-    if (!prompt) throw new Error("Prompt is required");
+    const { action, prompt, image_url, request_id, model } = await req.json();
 
-    // Choose model: image-to-video if image provided, else text-to-video
-    const model = image_url
-      ? "fal-ai/minimax-video/image-to-video"
-      : "fal-ai/minimax-video";
+    const videoModel = model || (image_url ? "fal-ai/minimax-video/image-to-video" : "fal-ai/minimax-video");
 
-    const input: any = { prompt };
-    if (image_url) {
-      input.image_url = image_url;
-    }
+    if (action === "submit") {
+      // Submit job to fal.ai queue
+      if (!prompt) throw new Error("Prompt is required");
 
-    // Submit to fal.ai queue
-    const submitRes = await fetch(`https://queue.fal.run/${model}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Key ${FAL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(input),
-    });
+      const input: any = { prompt };
+      if (image_url) input.image_url = image_url;
 
-    if (!submitRes.ok) {
-      const errText = await submitRes.text();
-      console.error("fal.ai submit error:", submitRes.status, errText);
-      throw new Error(`fal.ai submit failed (${submitRes.status})`);
-    }
+      const submitRes = await fetch(`https://queue.fal.run/${videoModel}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${FAL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
 
-    const { request_id } = await submitRes.json();
+      if (!submitRes.ok) {
+        const errText = await submitRes.text();
+        console.error("fal.ai submit error:", submitRes.status, errText);
+        throw new Error(`fal.ai submit failed (${submitRes.status})`);
+      }
 
-    // Poll for completion (max ~3 minutes)
-    const maxAttempts = 60;
-    const pollInterval = 3000;
+      const data = await submitRes.json();
+      return new Response(JSON.stringify({ request_id: data.request_id, status: "IN_QUEUE" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
 
-    for (let i = 0; i < maxAttempts; i++) {
-      await new Promise((r) => setTimeout(r, pollInterval));
+    } else if (action === "poll") {
+      // Check status of existing job
+      if (!request_id) throw new Error("request_id is required");
 
       const statusRes = await fetch(
-        `https://queue.fal.run/${model}/requests/${request_id}/status`,
-        {
-          headers: { Authorization: `Key ${FAL_API_KEY}` },
-        }
+        `https://queue.fal.run/${videoModel}/requests/${request_id}/status`,
+        { headers: { Authorization: `Key ${FAL_API_KEY}` } }
       );
 
-      if (!statusRes.ok) continue;
+      if (!statusRes.ok) {
+        throw new Error(`Status check failed (${statusRes.status})`);
+      }
+
       const status = await statusRes.json();
 
       if (status.status === "COMPLETED") {
-        // Fetch result
+        // Fetch the result
         const resultRes = await fetch(
-          `https://queue.fal.run/${model}/requests/${request_id}`,
-          {
-            headers: { Authorization: `Key ${FAL_API_KEY}` },
-          }
+          `https://queue.fal.run/${videoModel}/requests/${request_id}`,
+          { headers: { Authorization: `Key ${FAL_API_KEY}` } }
         );
 
         if (!resultRes.ok) throw new Error("Failed to fetch result");
         const result = await resultRes.json();
-
         const videoUrl = result.video?.url;
         if (!videoUrl) throw new Error("No video URL in result");
 
-        // Download video and upload to storage
+        // Download and upload to storage
         const videoRes = await fetch(videoUrl);
         const videoBytes = new Uint8Array(await videoRes.arrayBuffer());
 
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
 
         const fileName = `generated-videos/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
         const { error: uploadError } = await supabase.storage
@@ -93,20 +89,20 @@ serve(async (req) => {
           .upload(fileName, videoBytes, { contentType: "video/mp4" });
 
         if (uploadError) throw uploadError;
-
         const { data: urlData } = supabase.storage.from("media").getPublicUrl(fileName);
 
-        return new Response(JSON.stringify({ videoUrl: urlData.publicUrl }), {
+        return new Response(JSON.stringify({ status: "COMPLETED", videoUrl: urlData.publicUrl }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      if (status.status === "FAILED") {
-        throw new Error("Video generation failed: " + (status.error || "unknown error"));
-      }
-    }
+      return new Response(JSON.stringify({ status: status.status }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
 
-    throw new Error("Video generation timed out");
+    } else {
+      throw new Error("Invalid action. Use 'submit' or 'poll'.");
+    }
   } catch (e) {
     console.error("generate-video error:", e);
     return new Response(
