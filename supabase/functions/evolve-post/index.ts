@@ -117,6 +117,7 @@ serve(async (req) => {
         image_url: mediaUrl,
         prompt: evolvePrompt,
         strength: 0.7,
+        aspect_ratio: "16:9",
       }),
     });
 
