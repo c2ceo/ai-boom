@@ -43,6 +43,7 @@ const Create = () => {
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
@@ -350,7 +351,12 @@ const Create = () => {
               {generatedImage ? (
                 <>
                   <div className="relative">
-                    <img src={generatedImage} alt="Generated" className="w-full rounded-lg max-h-80 object-cover" />
+                    <img
+                      src={generatedImage}
+                      alt="Generated"
+                      className="w-full rounded-lg max-h-80 object-cover cursor-pointer"
+                      onClick={() => setLightboxOpen(true)}
+                    />
                     <button
                       onClick={() => { setGeneratedImage(null); }}
                       className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
@@ -539,6 +545,21 @@ const Create = () => {
               </p>
               <p className="text-xs opacity-80">{aiCheckResult.reason}</p>
             </div>
+          </div>
+        )}
+
+        {/* Fullscreen lightbox */}
+        {lightboxOpen && generatedImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 cursor-pointer"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <img
+              src={generatedImage}
+              alt="Full size generated image"
+              className="max-w-full max-h-full object-contain p-4"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         )}
       </div>
