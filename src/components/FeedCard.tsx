@@ -27,6 +27,7 @@ interface FeedCardProps {
     views_count?: number;
     category: string;
     user_id: string;
+    allow_evolve?: boolean;
   };
   profile?: {
     username: string | null;
@@ -245,19 +246,21 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
-            <button
-              onClick={handleEvolve}
-              disabled={evolving}
-              className="flex flex-col items-center gap-0.5"
-              title="Evolve this post"
-            >
-              {evolving ? (
-                <Loader2 className="h-5 w-5 text-primary animate-spin" />
-              ) : (
-                <Zap className="h-5 w-5 text-primary" />
-              )}
-              <span className="text-[10px] text-primary font-medium">Evolve</span>
-            </button>
+            {post.allow_evolve !== false && (
+              <button
+                onClick={handleEvolve}
+                disabled={evolving}
+                className="flex flex-col items-center gap-0.5"
+                title="Evolve this post"
+              >
+                {evolving ? (
+                  <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                ) : (
+                  <Zap className="h-5 w-5 text-primary" />
+                )}
+                <span className="text-[10px] text-primary font-medium">Evolve</span>
+              </button>
+            )}
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

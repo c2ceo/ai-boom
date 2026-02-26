@@ -237,6 +237,7 @@ export type Database = {
       posts: {
         Row: {
           ai_tool: string
+          allow_evolve: boolean
           caption: string | null
           category: string
           comments_count: number
@@ -256,6 +257,7 @@ export type Database = {
         }
         Insert: {
           ai_tool?: string
+          allow_evolve?: boolean
           caption?: string | null
           category?: string
           comments_count?: number
@@ -275,6 +277,7 @@ export type Database = {
         }
         Update: {
           ai_tool?: string
+          allow_evolve?: boolean
           caption?: string | null
           category?: string
           comments_count?: number
@@ -428,6 +431,7 @@ export type Database = {
         }
         Returns: {
           ai_tool: string
+          allow_evolve: boolean
           caption: string | null
           category: string
           comments_count: number

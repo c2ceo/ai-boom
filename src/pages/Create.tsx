@@ -10,8 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 const aiTools: string[] = []; // kept for potential future use
 const categories = [
@@ -33,6 +34,7 @@ const Create = () => {
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [allowEvolve, setAllowEvolve] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
@@ -268,6 +270,7 @@ const Create = () => {
         is_family_friendly: isFamilyFriendly,
         status: needsReview ? "pending_review" : "approved",
         voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
+        allow_evolve: allowEvolve,
       } as any);
 
       if (error) throw error;
@@ -514,6 +517,14 @@ const Create = () => {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" />
+            <Label htmlFor="allow-evolve" className="text-sm cursor-pointer">Allow others to evolve</Label>
+          </div>
+          <Switch id="allow-evolve" checked={allowEvolve} onCheckedChange={setAllowEvolve} />
         </div>
 
         <Button onClick={handlePost} disabled={loading || checking || generatingVideo} className="w-full" size="lg">
