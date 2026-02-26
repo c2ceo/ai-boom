@@ -36,7 +36,7 @@ const Create = () => {
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
-  const [imageProvider, setImageProvider] = useState<"gemini" | "fal">("gemini");
+  const imageProvider = "fal";
 
   // Video generation state
   const [videoPrompt, setVideoPrompt] = useState("");
@@ -137,7 +137,7 @@ const Create = () => {
       if (data?.imageUrl) {
         setGeneratedImage(data.imageUrl);
         setAiTool("in-app");
-        if (imageProvider === "fal") fetchCredits(); // refresh credits count
+        fetchCredits(); // refresh credits count
       }
     } catch (error: any) {
       toast({ title: "Generation failed", description: error.message, variant: "destructive" });
@@ -376,48 +376,25 @@ const Create = () => {
                 </>
               ) : (
                 <>
-                  <div className="flex gap-2 mb-1">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border/50">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">
+                        Credits: <span className="font-semibold text-foreground">{falCredits ?? "..."}</span>
+                      </span>
+                    </div>
                     <Button
                       type="button"
-                      variant={imageProvider === "gemini" ? "default" : "outline"}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setImageProvider("gemini")}
-                      className="flex-1 gap-1.5"
+                      onClick={handleBuyCredits}
+                      disabled={buyingCredits}
+                      className="gap-1.5 text-xs"
                     >
-                      <Sparkles className="h-3.5 w-3.5" /> Gemini
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={imageProvider === "fal" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setImageProvider("fal")}
-                      className="flex-1 gap-1.5"
-                    >
-                      <ImageIcon className="h-3.5 w-3.5" /> FLUX (fal.ai)
+                      {buyingCredits ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
+                      Buy 20 for $1
                     </Button>
                   </div>
-
-                  {imageProvider === "fal" && (
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border/50">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Coins className="h-4 w-4 text-primary" />
-                        <span className="text-muted-foreground">
-                          Credits: <span className="font-semibold text-foreground">{falCredits ?? "..."}</span>
-                        </span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleBuyCredits}
-                        disabled={buyingCredits}
-                        className="gap-1.5 text-xs"
-                      >
-                        {buyingCredits ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
-                        Buy 20 for $1
-                      </Button>
-                    </div>
-                  )}
 
                   <Textarea
                     placeholder="Describe the image you want to generate..."
@@ -427,13 +404,13 @@ const Create = () => {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={generating || !prompt.trim() || (imageProvider === "fal" && falCredits !== null && falCredits <= 0)}
+                    disabled={generating || !prompt.trim() || (falCredits !== null && falCredits <= 0)}
                     className="w-full gap-2"
                   >
                     <Sparkles className="h-4 w-4" />
-                    {generating ? "Generating..." : `Generate with ${imageProvider === "gemini" ? "Gemini" : "FLUX"}`}
+                    {generating ? "Generating..." : "Generate with FLUX"}
                   </Button>
-                  {imageProvider === "fal" && falCredits !== null && falCredits <= 0 && (
+                  {falCredits !== null && falCredits <= 0 && (
                     <p className="text-xs text-destructive text-center">Purchase credits to generate with FLUX</p>
                   )}
                 </>
