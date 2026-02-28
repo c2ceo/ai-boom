@@ -396,7 +396,7 @@ const Create = () => {
                       className="gap-1.5 text-xs"
                     >
                       {buyingCredits ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
-                      Buy 20 for $1
+                      Buy 20 for $2
                     </Button>
                   </div>
 
