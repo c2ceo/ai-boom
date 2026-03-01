@@ -51,9 +51,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const [evolving, setEvolving] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
-  const [originalImageUrl] = useState(post.image_url);
-  const [isHoldingOriginal, setIsHoldingOriginal] = useState(false);
-  const hasEvolved = currentImageUrl !== originalImageUrl;
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
@@ -154,13 +151,8 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className="snap-start w-full flex flex-col items-center bg-background py-4">
       {/* Media */}
       <div
-        className="relative w-full max-w-lg mx-auto cursor-pointer select-none"
+        className="relative w-full max-w-lg mx-auto cursor-pointer"
         onDoubleClick={handleDoubleTap}
-        onMouseDown={() => { if (hasEvolved) setIsHoldingOriginal(true); }}
-        onMouseUp={() => setIsHoldingOriginal(false)}
-        onMouseLeave={() => setIsHoldingOriginal(false)}
-        onTouchStart={() => { if (hasEvolved) setIsHoldingOriginal(true); }}
-        onTouchEnd={() => setIsHoldingOriginal(false)}
       >
         {post.video_url ? (
           <video
@@ -173,7 +165,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           />
         ) : currentImageUrl ? (
           <img
-            src={isHoldingOriginal ? originalImageUrl! : currentImageUrl!}
+            src={currentImageUrl!}
             alt={post.caption || "AI generated content"}
             className="w-full object-contain"
             loading="lazy"
