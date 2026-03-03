@@ -20,6 +20,8 @@ import PostView from "./pages/PostView";
 import Settings from "./pages/Settings";
 import Privacy from "./pages/Privacy";
 import ResetPassword from "./pages/ResetPassword";
+import Messages from "./pages/Messages";
+import Conversation from "./pages/Conversation";
 import NotFound from "./pages/NotFound";
 import { Sparkles } from "lucide-react";
 
@@ -80,6 +82,8 @@ const AppRoutes = () => {
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
       <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />
+      <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
+      <Route path="/messages/:conversationId" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
       <Route path="/post/:postId" element={<AppLayout><PostView /></AppLayout>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

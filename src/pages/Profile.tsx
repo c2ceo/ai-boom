@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban, Lock } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban, Lock, MessageCircle } from "lucide-react";
 import BombThumbnail from "@/components/BombThumbnail";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
@@ -325,6 +325,17 @@ const Profile = () => {
                 Follow
               </Button>
             )}
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={async () => {
+                if (!user || !targetUserId) return;
+                const { data } = await supabase.rpc("get_or_create_conversation", { other_user_id: targetUserId });
+                if (data) navigate(`/messages/${data}`);
+              }}
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon">
