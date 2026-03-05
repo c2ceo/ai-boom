@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
-import { Sparkles, ShieldCheck } from "lucide-react";
+import { Sparkles, ShieldCheck, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -122,6 +123,15 @@ const Home = () => {
           <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
         </Label>
       </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="fixed top-3 right-14 z-20 rounded-full gap-1.5"
+        onClick={() => navigate("/subscribe")}
+      >
+        <Crown className="h-4 w-4 text-primary" />
+        <span className="text-xs font-semibold">Subscribe</span>
+      </Button>
       {posts.map((post) => (
         <FeedCard
           key={post.id}
