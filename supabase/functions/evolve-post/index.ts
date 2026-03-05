@@ -37,6 +37,22 @@ serve(async (req) => {
 
     if (postError || !post) throw new Error("Post not found");
 
+    // Save original media before evolving (only if not already saved)
+    const { data: existingOriginal } = await supabase
+      .from("post_originals")
+      .select("id")
+      .eq("post_id", post_id)
+      .maybeSingle();
+
+    if (!existingOriginal) {
+      await supabase.from("post_originals").insert({
+        post_id,
+        original_image_url: post.image_url,
+        original_video_url: post.video_url,
+        original_caption: post.caption,
+      });
+    }
+
     const isVideo = !!post.video_url;
     const mediaUrl = isVideo ? post.video_url : post.image_url;
     if (!mediaUrl) throw new Error("Post has no media to evolve");

@@ -285,6 +285,41 @@ export type Database = {
           },
         ]
       }
+      post_originals: {
+        Row: {
+          id: string
+          original_caption: string | null
+          original_image_url: string | null
+          original_video_url: string | null
+          post_id: string
+          saved_at: string
+        }
+        Insert: {
+          id?: string
+          original_caption?: string | null
+          original_image_url?: string | null
+          original_video_url?: string | null
+          post_id: string
+          saved_at?: string
+        }
+        Update: {
+          id?: string
+          original_caption?: string | null
+          original_image_url?: string | null
+          original_video_url?: string | null
+          post_id?: string
+          saved_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_originals_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_votes: {
         Row: {
           created_at: string
