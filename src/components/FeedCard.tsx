@@ -335,21 +335,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                 <span className="text-[10px] text-primary font-medium">Evolve</span>
               </button>
             )}
-            {isOwner && originalImageUrl && originalImageUrl !== currentImageUrl && (
-              <button
-                onClick={handleRevert}
-                disabled={reverting}
-                className="flex flex-col items-center gap-0.5"
-                title="Revert to original"
-              >
-                {reverting ? (
-                  <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
-                ) : (
-                  <RotateCcw className="h-5 w-5 text-muted-foreground" />
-                )}
-                <span className="text-[10px] text-muted-foreground font-medium">Revert</span>
-              </button>
-            )}
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
