@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, RotateCcw } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,9 +51,65 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const [evolving, setEvolving] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [showingOriginal, setShowingOriginal] = useState(false);
+  const [reverting, setReverting] = useState(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const isOwner = user?.id === post.user_id;
+
+  // Fetch original if it exists
+  useEffect(() => {
+    const fetchOriginal = async () => {
+      const { data } = await supabase
+        .from("post_originals")
+        .select("original_image_url")
+        .eq("post_id", post.id)
+        .maybeSingle();
+      if (data?.original_image_url) {
+        setOriginalImageUrl(data.original_image_url);
+      }
+    };
+    fetchOriginal();
+  }, [post.id, currentImageUrl]);
+
+  const handleHoldStart = useCallback(() => {
+    if (!originalImageUrl || originalImageUrl === currentImageUrl) return;
+    holdTimerRef.current = setTimeout(() => {
+      setShowingOriginal(true);
+    }, 300);
+  }, [originalImageUrl, currentImageUrl]);
+
+  const handleHoldEnd = useCallback(() => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    setShowingOriginal(false);
+  }, []);
+
+  const handleRevert = async () => {
+    if (!user || !originalImageUrl) return;
+    if (!isOwner) {
+      toast({ title: "Only the post owner can revert" });
+      return;
+    }
+    setReverting(true);
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .update({ image_url: originalImageUrl, updated_at: new Date().toISOString() })
+        .eq("id", post.id);
+      if (error) throw error;
+      setCurrentImageUrl(originalImageUrl);
+      toast({ title: "Reverted to original! 🔄" });
+    } catch (err: any) {
+      toast({ title: "Revert failed", description: err.message, variant: "destructive" });
+    } finally {
+      setReverting(false);
+    }
+  };
 
   useEffect(() => {
     setLikesCount(post.likes_count);
@@ -151,8 +207,14 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className="snap-start w-full flex flex-col items-center bg-background py-4">
       {/* Media */}
       <div
-        className="relative w-full max-w-lg mx-auto cursor-pointer"
+        className="relative w-full max-w-lg mx-auto cursor-pointer select-none"
         onDoubleClick={handleDoubleTap}
+        onMouseDown={handleHoldStart}
+        onMouseUp={handleHoldEnd}
+        onMouseLeave={handleHoldEnd}
+        onTouchStart={handleHoldStart}
+        onTouchEnd={handleHoldEnd}
+        onTouchCancel={handleHoldEnd}
       >
         {post.video_url ? (
           <video
@@ -164,12 +226,24 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             playsInline
           />
         ) : currentImageUrl ? (
-          <img
-            src={currentImageUrl!}
-            alt={post.caption || "AI generated content"}
-            className="w-full object-contain"
-            loading="lazy"
-          />
+          <div className="relative">
+            <img
+              src={showingOriginal ? originalImageUrl! : currentImageUrl!}
+              alt={post.caption || "AI generated content"}
+              className="w-full object-contain transition-opacity duration-200"
+              loading="lazy"
+            />
+            {showingOriginal && (
+              <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-foreground">
+                Original
+              </div>
+            )}
+            {originalImageUrl && originalImageUrl !== currentImageUrl && !showingOriginal && (
+              <div className="absolute bottom-4 left-4 bg-background/60 backdrop-blur-sm rounded-full px-2 py-1 text-[10px] text-muted-foreground">
+                Hold to see original
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-muted">
             <span className="text-muted-foreground">No media</span>
@@ -259,6 +333,21 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                   <Zap className="h-5 w-5 text-primary" />
                 )}
                 <span className="text-[10px] text-primary font-medium">Evolve</span>
+              </button>
+            )}
+            {isOwner && originalImageUrl && originalImageUrl !== currentImageUrl && (
+              <button
+                onClick={handleRevert}
+                disabled={reverting}
+                className="flex flex-col items-center gap-0.5"
+                title="Revert to original"
+              >
+                {reverting ? (
+                  <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                ) : (
+                  <RotateCcw className="h-5 w-5 text-muted-foreground" />
+                )}
+                <span className="text-[10px] text-muted-foreground font-medium">Revert</span>
               </button>
             )}
             {isOwner && (
