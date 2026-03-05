@@ -1,4 +1,5 @@
 import { Purchases } from "@revenuecat/purchases-js";
+import { supabase } from "@/integrations/supabase/client";
 
 let purchasesInstance: Purchases | null = null;
 
@@ -20,6 +21,17 @@ export const checkEntitlement = async (entitlementId: string = "AI-BOOM"): Promi
   } catch {
     return false;
   }
+};
+
+/** Check subscription status from the database (populated by webhook) */
+export const checkSubscriptionFromDB = async (userId: string): Promise<boolean> => {
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("is_active")
+    .eq("user_id", userId)
+    .eq("entitlement", "AI-BOOM")
+    .maybeSingle();
+  return data?.is_active ?? false;
 };
 
 export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> => {
