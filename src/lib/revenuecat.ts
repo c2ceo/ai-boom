@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 let purchasesInstance: Purchases | null = null;
 
-const RC_API_KEY = "YOUR_REVENUECAT_PUBLIC_API_KEY"; // Replace with your RevenueCat Web public API key
+const RC_API_KEY = "appl_ODNWOaxxQutyPHEDUCBBVCrVjeA";
 
 export const initRevenueCat = (appUserId: string): Purchases => {
   if (purchasesInstance) return purchasesInstance;
