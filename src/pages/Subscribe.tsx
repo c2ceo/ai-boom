@@ -53,7 +53,11 @@ const Subscribe = () => {
         </div>
       )}
 
-      <div ref={containerRef} className="px-4" />
+      <div
+        ref={containerRef}
+        className="px-4"
+        style={{ minHeight: "60vh", position: "relative", overflow: "visible" }}
+      />
     </div>
   );
 };
