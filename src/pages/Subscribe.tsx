@@ -18,10 +18,10 @@ const Subscribe = () => {
     const show = async () => {
       try {
         initRevenueCat(user.id);
+        setLoading(false);
         await presentOffering(containerRef.current!);
       } catch (e: any) {
         setError(e?.message || "Failed to load offerings");
-      } finally {
         setLoading(false);
       }
     };
