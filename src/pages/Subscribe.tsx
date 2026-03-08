@@ -35,7 +35,7 @@ const Subscribe = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">Subscribe</h1>
+        <h1 className="text-xl font-bold">Buy Credits</h1>
       </div>
 
       {loading && (

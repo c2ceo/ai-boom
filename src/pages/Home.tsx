@@ -130,7 +130,7 @@ const Home = () => {
         onClick={() => navigate("/subscribe")}
       >
         <Crown className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold">Buy Credits</span>
+        <span className="text-xs font-semibold text-foreground">Buy Credits</span>
       </Button>
       {posts.map((post) => (
         <FeedCard
