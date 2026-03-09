@@ -139,6 +139,10 @@ const Create = () => {
         body: { imageBase64: editedPreview || sourceBase64, prompt: editPrompt.trim() },
       });
       if (error) throw error;
+      if (data?.needs_credits) {
+        toast({ title: "No credits remaining", description: "Purchase credits to use AI photo editing.", variant: "destructive" });
+        return;
+      }
       if (data?.error) {
         toast({ title: "Edit failed", description: data.error, variant: "destructive" });
         return;
@@ -146,6 +150,7 @@ const Create = () => {
       if (data?.editedImageUrl) {
         setEditedPreview(data.editedImageUrl);
         setPhotoEdited(true);
+        fetchCredits();
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
