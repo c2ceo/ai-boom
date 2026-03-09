@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.evolve-post]
 verify_jwt = false
+
+[functions.edit-photo]
+verify_jwt = false

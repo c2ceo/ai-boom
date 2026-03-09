@@ -88,6 +88,7 @@ const AppRoutes = () => {
       <Route path="/messages/:conversationId" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
       <Route path="/post/:postId" element={<AppLayout><PostView /></AppLayout>} />
       <Route path="/subscribe" element={<ProtectedRoute><AppLayout><Subscribe /></AppLayout></ProtectedRoute>} />
+      <Route path="/photo-editor" element={<ProtectedRoute><AppLayout><PhotoEditor /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
