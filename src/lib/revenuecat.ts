@@ -5,6 +5,13 @@ let purchasesInstance: Purchases | null = null;
 
 const RC_API_KEY = "rcb_xxooIHeWFLKjFnQaLytyGBCrgdjJ";
 
+export const RC_PACKAGES = {
+  AIBOOM_200_CRED: "aiboom200cred",
+  AIBOOM_300_CRED: "aiboom300cred",
+  AIBOOM_600_CRED: "aiboom600cred",
+  AIBOOM_800_CRED: "aiboom800cred",
+} as const;
+
 export const initRevenueCat = (appUserId: string): Purchases => {
   if (purchasesInstance) return purchasesInstance;
   purchasesInstance = Purchases.configure(RC_API_KEY, appUserId);
@@ -37,28 +44,4 @@ export const checkSubscriptionFromDB = async (userId: string): Promise<boolean> 
 export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> => {
   if (!purchasesInstance) throw new Error("RevenueCat not initialized");
   await purchasesInstance.presentPaywall({ htmlTarget });
-};
-
-/** Purchase a specific product by its RevenueCat product ID */
-export const purchaseByProductId = async (
-  productId: string,
-  htmlTarget?: HTMLElement
-): Promise<void> => {
-  if (!purchasesInstance) throw new Error("RevenueCat not initialized");
-
-  const offerings = await purchasesInstance.getOfferings();
-  const allPackages = Object.values(offerings.all).flatMap(
-    (o) => o.availablePackages
-  );
-
-  const pkg = allPackages.find(
-    (p) => p.rcBillingProduct.identifier === productId
-  );
-
-  if (!pkg) throw new Error(`Product "${productId}" not found in offerings`);
-
-  const params: any = { rcPackage: pkg };
-  if (htmlTarget) params.htmlTarget = htmlTarget;
-
-  await purchasesInstance.purchase(params);
 };
