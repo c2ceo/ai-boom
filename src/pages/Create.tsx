@@ -359,28 +359,106 @@ const Create = () => {
           <Card className="border-dashed border-2 border-border/50 bg-card/50 mb-4">
             <CardContent className="p-6">
               {preview ? (
-              <div className="relative">
-                  {file?.type?.startsWith("video/") ? (
-                    <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
-                  ) : (
-                    <img src={preview} alt="Preview" className="w-full rounded-lg max-h-80 object-cover" />
+                <div className="space-y-3">
+                  <div className="relative">
+                    {file?.type?.startsWith("video/") ? (
+                      <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
+                    ) : (
+                      <img
+                        src={editedPreview || preview}
+                        alt={editedPreview ? "Edited" : "Original"}
+                        className="w-full rounded-lg max-h-80 object-cover"
+                      />
+                    )}
+                    {/* Badge */}
+                    {!file?.type?.startsWith("video/") && (
+                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        photoEdited
+                          ? "bg-primary/90 text-primary-foreground"
+                          : "bg-muted/90 text-muted-foreground"
+                      }`}>
+                        {photoEdited ? "✓ AI Edited" : "Original"}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => { setFile(null); setPreview(null); setEditedPreview(null); setPhotoEdited(false); setSourceBase64(null); }}
+                      className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* AI Edit section - required for images */}
+                  {!file?.type?.startsWith("video/") && (
+                    <div className="space-y-2 border border-border/50 rounded-lg p-3 bg-muted/20">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Wand2 className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">AI Edit Required</span>
+                        {photoEdited && <Check className="h-4 w-4 text-primary ml-auto" />}
+                      </div>
+                      <Textarea
+                        placeholder="Describe how to edit this photo..."
+                        value={editPrompt}
+                        onChange={(e) => setEditPrompt(e.target.value)}
+                        rows={2}
+                        className="resize-none"
+                      />
+                      <div className="flex flex-wrap gap-1.5 mb-1">
+                        {editSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setEditPrompt(s)}
+                            className="px-2 py-1 rounded-full text-[10px] bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={handleApplyEdit}
+                        disabled={editingPhoto || !editPrompt.trim()}
+                        className="w-full gap-2"
+                        size="sm"
+                      >
+                        {editingPhoto ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Editing...</>
+                        ) : (
+                          <><Wand2 className="h-3.5 w-3.5" /> {editedPreview ? "Edit Again" : "Apply AI Edit"}</>
+                        )}
+                      </Button>
+                      {!photoEdited && (
+                        <p className="text-[10px] text-muted-foreground text-center">You must apply at least one AI edit before publishing</p>
+                      )}
+                    </div>
                   )}
-                  <button
-                    onClick={() => { setFile(null); setPreview(null); }}
-                    className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
               ) : (
-                  <label className="flex flex-col items-center gap-3 cursor-pointer py-8">
-                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                   <div className="text-center">
-                     <span className="text-sm text-muted-foreground">Tap to upload AI content</span>
-                     <span className="text-xs text-muted-foreground/70">(Max 50MB)</span>
-                   </div>
-                   <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
-                </label>
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                  <div className="text-center">
+                    <span className="text-sm text-muted-foreground">Upload a photo to edit with AI</span>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Photos require an AI edit before posting</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <label className="cursor-pointer">
+                      <Button variant="outline" className="gap-2 pointer-events-none">
+                        <ImageIcon className="h-4 w-4" /> Gallery
+                      </Button>
+                      <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
+                    </label>
+                    <Button onClick={() => cameraInputRef.current?.click()} className="gap-2">
+                      <Camera className="h-4 w-4" /> Camera
+                    </Button>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
