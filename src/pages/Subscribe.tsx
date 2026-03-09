@@ -20,7 +20,17 @@ const Subscribe = () => {
         initRevenueCat(user.id);
         const rc = getRevenueCat();
         if (!rc) throw new Error("RevenueCat not initialized");
-        await rc.presentPaywall({ htmlTarget: paywallRef.current! });
+
+        // Fetch offerings and find the one containing aiboom200cred
+        const offerings = await rc.getOfferings();
+        const targetOffering = Object.values(offerings.all).find((o) =>
+          o.availablePackages.some((pkg) => pkg.identifier === "aiboom200cred")
+        ) ?? offerings.current;
+
+        await rc.presentPaywall({
+          htmlTarget: paywallRef.current!,
+          ...(targetOffering ? { offering: targetOffering } : {}),
+        });
       } catch (e: any) {
         setError(e?.message || "Failed to load paywall");
       } finally {
