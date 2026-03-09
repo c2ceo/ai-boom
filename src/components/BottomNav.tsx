@@ -8,7 +8,6 @@ const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/explore", icon: Search, label: "Explore" },
   { to: "/create", icon: PlusSquare, label: "Create" },
-  { to: "/photo-editor", icon: Wand2, label: "Edit" },
   { to: "/vote", icon: ShieldAlert, label: "Vote" },
   { to: "/messages", icon: MessageCircle, label: "DMs" },
   { to: "/notifications", icon: Bell, label: "Alerts", showBadge: true },
