@@ -47,6 +47,14 @@ const Create = () => {
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  // AI photo edit state for uploads
+  const [editPrompt, setEditPrompt] = useState("");
+  const [editedPreview, setEditedPreview] = useState<string | null>(null);
+  const [editingPhoto, setEditingPhoto] = useState(false);
+  const [photoEdited, setPhotoEdited] = useState(false);
+  const [sourceBase64, setSourceBase64] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
   const [buyingCredits, setBuyingCredits] = useState(false);
