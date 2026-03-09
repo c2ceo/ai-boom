@@ -119,8 +119,47 @@ const Create = () => {
     if (f) {
       setFile(f);
       setPreview(URL.createObjectURL(f));
+      setPhotoEdited(false);
+      setEditedPreview(null);
+      setEditPrompt("");
+      // Read base64 for AI editing
+      if (!f.type.startsWith("video/")) {
+        const reader = new FileReader();
+        reader.onload = () => setSourceBase64(reader.result as string);
+        reader.readAsDataURL(f);
+      }
     }
   };
+
+  const handleApplyEdit = async () => {
+    if (!sourceBase64 || !editPrompt.trim()) return;
+    setEditingPhoto(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("edit-photo", {
+        body: { imageBase64: editedPreview || sourceBase64, prompt: editPrompt.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Edit failed", description: data.error, variant: "destructive" });
+        return;
+      }
+      if (data?.editedImageUrl) {
+        setEditedPreview(data.editedImageUrl);
+        setPhotoEdited(true);
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setEditingPhoto(false);
+    }
+  };
+
+  const editSuggestions = [
+    "Remove the background",
+    "Add a cinematic color grade",
+    "Make it look like a painting",
+    "Enhance and sharpen",
+  ];
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
