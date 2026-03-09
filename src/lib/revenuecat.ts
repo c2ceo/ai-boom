@@ -5,6 +5,13 @@ let purchasesInstance: Purchases | null = null;
 
 const RC_API_KEY = "rcb_xxooIHeWFLKjFnQaLytyGBCrgdjJ";
 
+export const RC_PACKAGES = {
+  AIBOOM_200_CRED: "aiboom200cred",
+  AIBOOM_300_CRED: "aiboom300cred",
+  AIBOOM_600_CRED: "aiboom600cred",
+  AIBOOM_800_CRED: "aiboom800cred",
+} as const;
+
 export const initRevenueCat = (appUserId: string): Purchases => {
   if (purchasesInstance) return purchasesInstance;
   purchasesInstance = Purchases.configure(RC_API_KEY, appUserId);
