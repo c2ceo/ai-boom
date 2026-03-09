@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Home, Search, PlusSquare, Bell, User, ShieldAlert, MessageCircle } from "lucide-react";
+import { Home, Search, PlusSquare, Bell, User, ShieldAlert, MessageCircle, Wand2 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
