@@ -49,10 +49,14 @@ export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> =>
 export const purchaseByPackageId = async (packageId: string) => {
   if (!purchasesInstance) throw new Error("RevenueCat not initialized");
   const offerings = await purchasesInstance.getOfferings();
+  console.log("RevenueCat offerings:", JSON.stringify(offerings, null, 2));
   const current = offerings.current;
   if (!current) throw new Error("No current offering found");
-  const pkg = current.packagesById[packageId];
-  if (!pkg) throw new Error(`Package "${packageId}" not found in current offering`);
+  console.log("Available packagesById keys:", Object.keys(current.packagesById));
+  console.log("Available packages:", current.availablePackages.map(p => ({ id: p.identifier, productId: p.rcBillingProduct?.identifier })));
+  const pkg = current.packagesById[packageId] 
+    ?? current.availablePackages.find(p => p.identifier === packageId || p.rcBillingProduct?.identifier === packageId);
+  if (!pkg) throw new Error(`Package "${packageId}" not found. Available: ${Object.keys(current.packagesById).join(", ")}`);
   const { customerInfo } = await purchasesInstance.purchase({ rcPackage: pkg });
   return customerInfo;
 };
