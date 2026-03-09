@@ -45,3 +45,14 @@ export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> =>
   if (!purchasesInstance) throw new Error("RevenueCat not initialized");
   await purchasesInstance.presentPaywall({ htmlTarget });
 };
+
+export const purchaseByPackageId = async (packageId: string) => {
+  if (!purchasesInstance) throw new Error("RevenueCat not initialized");
+  const offerings = await purchasesInstance.getOfferings();
+  const current = offerings.current;
+  if (!current) throw new Error("No current offering found");
+  const pkg = current.packagesById[packageId];
+  if (!pkg) throw new Error(`Package "${packageId}" not found in current offering`);
+  const { customerInfo } = await purchasesInstance.purchase({ rcPackage: pkg });
+  return customerInfo;
+};
