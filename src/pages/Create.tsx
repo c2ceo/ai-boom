@@ -279,12 +279,24 @@ const Create = () => {
       const isVideo = mode === "video" || file?.type?.startsWith("video/");
 
       if (mode === "upload" && file) {
-        const ext = file.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        uploadedUrl = publicUrl;
+        if (editedPreview && !isVideo) {
+          // Upload the AI-edited image (base64)
+          const base64Data = editedPreview.split(",")[1];
+          const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          const blob = new Blob([byteArray], { type: "image/png" });
+          const path = `${user.id}/${Date.now()}.png`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(path, blob);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+          uploadedUrl = publicUrl;
+        } else {
+          const ext = file.name.split(".").pop();
+          const path = `${user.id}/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+          uploadedUrl = publicUrl;
+        }
       }
 
       // Run AI filter on uploaded images (skip for videos and in-app generated)
