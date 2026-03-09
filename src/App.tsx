@@ -23,6 +23,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
 import Subscribe from "./pages/Subscribe";
+import PhotoEditor from "./pages/PhotoEditor";
 import NotFound from "./pages/NotFound";
 import { Sparkles } from "lucide-react";
 
