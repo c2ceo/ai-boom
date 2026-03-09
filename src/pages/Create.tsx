@@ -537,12 +537,11 @@ const Create = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={handleBuyCredits}
-                      disabled={buyingCredits}
+                      onClick={() => navigate("/subscribe")}
                       className="gap-1.5 text-xs"
                     >
-                      {buyingCredits ? <Loader2 className="h-3 w-3 animate-spin" /> : <Coins className="h-3 w-3" />}
-                      Buy 20 for $2
+                      <Coins className="h-3 w-3" />
+                      Buy Credits
                     </Button>
                   </div>
 
