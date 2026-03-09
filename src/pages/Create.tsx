@@ -256,6 +256,10 @@ const Create = () => {
       return;
     }
     if (mode === "upload" && !file) return;
+    if (mode === "upload" && file && !file.type.startsWith("video/") && !photoEdited) {
+      toast({ title: "AI edit required", description: "Please apply at least one AI edit to your photo before publishing.", variant: "destructive" });
+      return;
+    }
     if (mode === "generate" && !generatedImage) {
       toast({ title: "Please generate an image first", variant: "destructive" });
       return;
