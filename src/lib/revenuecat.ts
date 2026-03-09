@@ -1,4 +1,4 @@
-import { Purchases } from "@revenuecat/purchases-js";
+import { Purchases, type Package } from "@revenuecat/purchases-js";
 import { supabase } from "@/integrations/supabase/client";
 
 let purchasesInstance: Purchases | null = null;
@@ -11,6 +11,13 @@ export const RC_PACKAGES = {
   AIBOOM_600_CRED: "aiboom600cred",
   AIBOOM_800_CRED: "aiboom800cred",
 } as const;
+
+export const CREDIT_PACK_META: Record<string, { credits: number; label: string }> = {
+  [RC_PACKAGES.AIBOOM_200_CRED]: { credits: 200, label: "200 Credits" },
+  [RC_PACKAGES.AIBOOM_300_CRED]: { credits: 300, label: "300 Credits" },
+  [RC_PACKAGES.AIBOOM_600_CRED]: { credits: 600, label: "600 Credits" },
+  [RC_PACKAGES.AIBOOM_800_CRED]: { credits: 800, label: "800 Credits" },
+};
 
 export const initRevenueCat = (appUserId: string): Purchases => {
   if (purchasesInstance) return purchasesInstance;
@@ -39,6 +46,25 @@ export const checkSubscriptionFromDB = async (userId: string): Promise<boolean> 
     .eq("entitlement", "AI-BOOM")
     .maybeSingle();
   return data?.is_active ?? false;
+};
+
+/** Fetch all credit-pack packages from the current offering */
+export const fetchCreditPackages = async (): Promise<Package[]> => {
+  if (!purchasesInstance) throw new Error("RevenueCat not initialized");
+  const offerings = await purchasesInstance.getOfferings();
+  const current = offerings.current;
+  if (!current) return [];
+
+  const validIds = Object.values(RC_PACKAGES) as string[];
+  return current.availablePackages.filter((pkg) =>
+    validIds.includes(pkg.identifier)
+  );
+};
+
+/** Purchase a specific package */
+export const purchasePackage = async (pkg: Package) => {
+  if (!purchasesInstance) throw new Error("RevenueCat not initialized");
+  return purchasesInstance.purchase({ rcPackage: pkg });
 };
 
 export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> => {
