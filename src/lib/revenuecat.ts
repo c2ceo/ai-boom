@@ -38,3 +38,27 @@ export const presentOffering = async (htmlTarget: HTMLElement): Promise<void> =>
   if (!purchasesInstance) throw new Error("RevenueCat not initialized");
   await purchasesInstance.presentPaywall({ htmlTarget });
 };
+
+/** Purchase a specific product by its RevenueCat product ID */
+export const purchaseByProductId = async (
+  productId: string,
+  htmlTarget?: HTMLElement
+): Promise<void> => {
+  if (!purchasesInstance) throw new Error("RevenueCat not initialized");
+
+  const offerings = await purchasesInstance.getOfferings();
+  const allPackages = Object.values(offerings.all).flatMap(
+    (o) => o.availablePackages
+  );
+
+  const pkg = allPackages.find(
+    (p) => p.rcBillingProduct.identifier === productId
+  );
+
+  if (!pkg) throw new Error(`Product "${productId}" not found in offerings`);
+
+  const params: any = { rcPackage: pkg };
+  if (htmlTarget) params.htmlTarget = htmlTarget;
+
+  await purchasesInstance.purchase(params);
+};
