@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
@@ -46,6 +46,14 @@ const Create = () => {
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // AI photo edit state for uploads
+  const [editPrompt, setEditPrompt] = useState("");
+  const [editedPreview, setEditedPreview] = useState<string | null>(null);
+  const [editingPhoto, setEditingPhoto] = useState(false);
+  const [photoEdited, setPhotoEdited] = useState(false);
+  const [sourceBase64, setSourceBase64] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
@@ -111,8 +119,47 @@ const Create = () => {
     if (f) {
       setFile(f);
       setPreview(URL.createObjectURL(f));
+      setPhotoEdited(false);
+      setEditedPreview(null);
+      setEditPrompt("");
+      // Read base64 for AI editing
+      if (!f.type.startsWith("video/")) {
+        const reader = new FileReader();
+        reader.onload = () => setSourceBase64(reader.result as string);
+        reader.readAsDataURL(f);
+      }
     }
   };
+
+  const handleApplyEdit = async () => {
+    if (!sourceBase64 || !editPrompt.trim()) return;
+    setEditingPhoto(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("edit-photo", {
+        body: { imageBase64: editedPreview || sourceBase64, prompt: editPrompt.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast({ title: "Edit failed", description: data.error, variant: "destructive" });
+        return;
+      }
+      if (data?.editedImageUrl) {
+        setEditedPreview(data.editedImageUrl);
+        setPhotoEdited(true);
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setEditingPhoto(false);
+    }
+  };
+
+  const editSuggestions = [
+    "Remove the background",
+    "Add a cinematic color grade",
+    "Make it look like a painting",
+    "Enhance and sharpen",
+  ];
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -209,6 +256,10 @@ const Create = () => {
       return;
     }
     if (mode === "upload" && !file) return;
+    if (mode === "upload" && file && !file.type.startsWith("video/") && !photoEdited) {
+      toast({ title: "AI edit required", description: "Please apply at least one AI edit to your photo before publishing.", variant: "destructive" });
+      return;
+    }
     if (mode === "generate" && !generatedImage) {
       toast({ title: "Please generate an image first", variant: "destructive" });
       return;
@@ -228,12 +279,24 @@ const Create = () => {
       const isVideo = mode === "video" || file?.type?.startsWith("video/");
 
       if (mode === "upload" && file) {
-        const ext = file.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        uploadedUrl = publicUrl;
+        if (editedPreview && !isVideo) {
+          // Upload the AI-edited image (base64)
+          const base64Data = editedPreview.split(",")[1];
+          const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          const blob = new Blob([byteArray], { type: "image/png" });
+          const path = `${user.id}/${Date.now()}.png`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(path, blob);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+          uploadedUrl = publicUrl;
+        } else {
+          const ext = file.name.split(".").pop();
+          const path = `${user.id}/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+          uploadedUrl = publicUrl;
+        }
       }
 
       // Run AI filter on uploaded images (skip for videos and in-app generated)
@@ -312,28 +375,106 @@ const Create = () => {
           <Card className="border-dashed border-2 border-border/50 bg-card/50 mb-4">
             <CardContent className="p-6">
               {preview ? (
-              <div className="relative">
-                  {file?.type?.startsWith("video/") ? (
-                    <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
-                  ) : (
-                    <img src={preview} alt="Preview" className="w-full rounded-lg max-h-80 object-cover" />
+                <div className="space-y-3">
+                  <div className="relative">
+                    {file?.type?.startsWith("video/") ? (
+                      <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
+                    ) : (
+                      <img
+                        src={editedPreview || preview}
+                        alt={editedPreview ? "Edited" : "Original"}
+                        className="w-full rounded-lg max-h-80 object-cover"
+                      />
+                    )}
+                    {/* Badge */}
+                    {!file?.type?.startsWith("video/") && (
+                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        photoEdited
+                          ? "bg-primary/90 text-primary-foreground"
+                          : "bg-muted/90 text-muted-foreground"
+                      }`}>
+                        {photoEdited ? "✓ AI Edited" : "Original"}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => { setFile(null); setPreview(null); setEditedPreview(null); setPhotoEdited(false); setSourceBase64(null); }}
+                      className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* AI Edit section - required for images */}
+                  {!file?.type?.startsWith("video/") && (
+                    <div className="space-y-2 border border-border/50 rounded-lg p-3 bg-muted/20">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Wand2 className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">AI Edit Required</span>
+                        {photoEdited && <Check className="h-4 w-4 text-primary ml-auto" />}
+                      </div>
+                      <Textarea
+                        placeholder="Describe how to edit this photo..."
+                        value={editPrompt}
+                        onChange={(e) => setEditPrompt(e.target.value)}
+                        rows={2}
+                        className="resize-none"
+                      />
+                      <div className="flex flex-wrap gap-1.5 mb-1">
+                        {editSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setEditPrompt(s)}
+                            className="px-2 py-1 rounded-full text-[10px] bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={handleApplyEdit}
+                        disabled={editingPhoto || !editPrompt.trim()}
+                        className="w-full gap-2"
+                        size="sm"
+                      >
+                        {editingPhoto ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Editing...</>
+                        ) : (
+                          <><Wand2 className="h-3.5 w-3.5" /> {editedPreview ? "Edit Again" : "Apply AI Edit"}</>
+                        )}
+                      </Button>
+                      {!photoEdited && (
+                        <p className="text-[10px] text-muted-foreground text-center">You must apply at least one AI edit before publishing</p>
+                      )}
+                    </div>
                   )}
-                  <button
-                    onClick={() => { setFile(null); setPreview(null); }}
-                    className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
               ) : (
-                  <label className="flex flex-col items-center gap-3 cursor-pointer py-8">
-                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                   <div className="text-center">
-                     <span className="text-sm text-muted-foreground">Tap to upload AI content</span>
-                     <span className="text-xs text-muted-foreground/70">(Max 50MB)</span>
-                   </div>
-                   <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
-                </label>
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                  <div className="text-center">
+                    <span className="text-sm text-muted-foreground">Upload a photo to edit with AI</span>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Photos require an AI edit before posting</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <label className="cursor-pointer">
+                      <Button variant="outline" className="gap-2 pointer-events-none">
+                        <ImageIcon className="h-4 w-4" /> Gallery
+                      </Button>
+                      <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
+                    </label>
+                    <Button onClick={() => cameraInputRef.current?.click()} className="gap-2">
+                      <Camera className="h-4 w-4" /> Camera
+                    </Button>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
