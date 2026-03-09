@@ -1,33 +1,56 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { initRevenueCat, presentOffering } from "@/lib/revenuecat";
+import {
+  initRevenueCat,
+  fetchCreditPackages,
+  purchasePackage,
+  CREDIT_PACK_META,
+} from "@/lib/revenuecat";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Coins, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import type { Package } from "@revenuecat/purchases-js";
 
 const Subscribe = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.id || !containerRef.current) return;
+    if (!user?.id) return;
 
-    const show = async () => {
+    const load = async () => {
       try {
         initRevenueCat(user.id);
-        setLoading(false);
-        await presentOffering(containerRef.current!);
+        const packs = await fetchCreditPackages();
+        setPackages(packs);
       } catch (e: any) {
         setError(e?.message || "Failed to load offerings");
+      } finally {
         setLoading(false);
       }
     };
 
-    show();
+    load();
   }, [user?.id]);
+
+  const handlePurchase = async (pkg: Package) => {
+    setPurchasing(pkg.identifier);
+    try {
+      await purchasePackage(pkg);
+      toast.success("Purchase successful! Credits will be added shortly.");
+    } catch (e: any) {
+      if (e?.errorCode !== 1) {
+        toast.error(e?.message || "Purchase failed");
+      }
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
@@ -53,11 +76,44 @@ const Subscribe = () => {
         </div>
       )}
 
-      <div
-        ref={containerRef}
-        className="px-4"
-        style={{ minHeight: "60vh", position: "relative", overflow: "visible" }}
-      />
+      {!loading && !error && packages.length === 0 && (
+        <div className="px-6 py-10 text-center text-muted-foreground">
+          No credit packs available right now.
+        </div>
+      )}
+
+      {!loading && !error && packages.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 px-4">
+          {packages.map((pkg) => {
+            const meta = CREDIT_PACK_META[pkg.identifier];
+            const price = pkg.rcBillingProduct?.currentPrice?.formattedPrice ?? "—";
+            const isBuying = purchasing === pkg.identifier;
+
+            return (
+              <button
+                key={pkg.identifier}
+                onClick={() => handlePurchase(pkg)}
+                disabled={!!purchasing}
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-5 text-card-foreground transition-all hover:border-primary/50 hover:shadow-lg disabled:opacity-60"
+              >
+                <Sparkles className="h-6 w-6 text-primary" />
+                <span className="text-lg font-bold">
+                  {meta?.label ?? pkg.identifier}
+                </span>
+                <span className="text-sm text-muted-foreground">{price}</span>
+                <span className="mt-1 flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  {isBuying ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Coins className="h-3 w-3" />
+                  )}
+                  {isBuying ? "Processing…" : "Buy"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
