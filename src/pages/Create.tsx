@@ -463,13 +463,11 @@ const Create = () => {
                     <span className="text-sm text-muted-foreground">Upload a photo to edit with AI</span>
                     <p className="text-xs text-muted-foreground/70 mt-1">Photos require an AI edit before posting</p>
                   </div>
-                  <div className="flex gap-3">
-                    <label className="cursor-pointer">
-                      <Button variant="outline" className="gap-2 pointer-events-none">
+                    <div className="flex gap-3">
+                    <Button variant="outline" className="gap-2" onClick={() => galleryInputRef.current?.click()}>
                         <ImageIcon className="h-4 w-4" /> Gallery
                       </Button>
-                      <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
-                    </label>
+                      <input ref={galleryInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
                     <Button onClick={() => cameraInputRef.current?.click()} className="gap-2">
                       <Camera className="h-4 w-4" /> Camera
                     </Button>
