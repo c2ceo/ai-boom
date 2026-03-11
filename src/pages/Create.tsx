@@ -46,6 +46,8 @@ const Create = () => {
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(5);
+  const [videoAudio, setVideoAudio] = useState(false);
 
   // AI photo edit state for uploads
   const [editPrompt, setEditPrompt] = useState("");
@@ -208,7 +210,7 @@ const Create = () => {
     try {
       // Step 1: Submit to queue
       const { data: submitData, error: submitError } = await supabase.functions.invoke("generate-video", {
-        body: { action: "submit", prompt: videoPrompt },
+        body: { action: "submit", prompt: videoPrompt, duration: videoDuration, audio: videoAudio },
       });
       if (submitError) throw submitError;
       if (submitData?.error) throw new Error(submitData.error);
@@ -594,22 +596,80 @@ const Create = () => {
                   </Button>
                 </>
               ) : (
-                <>
+              <>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border/50">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="h-4 w-4 text-primary" />
+                      <span className="text-muted-foreground">
+                        Credits: <span className="font-semibold text-foreground">{falCredits ?? "..."}</span>
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/subscribe")}
+                      className="gap-1.5 text-xs"
+                    >
+                      <Coins className="h-3 w-3" />
+                      Buy Credits
+                    </Button>
+                  </div>
+
                   <Textarea
                     placeholder="Describe the video you want to create... (e.g. 'A golden sunset over calm ocean waves, cinematic slow motion')"
                     value={videoPrompt}
                     onChange={(e) => setVideoPrompt(e.target.value)}
                     rows={3}
                   />
-                  <Button onClick={handleGenerateVideo} disabled={generatingVideo || !videoPrompt.trim()} className="w-full gap-2">
+
+                  {/* Duration selector */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Video Length</Label>
+                    <div className="flex gap-2">
+                      {[3, 5, 7, 10].map((sec) => (
+                        <button
+                          key={sec}
+                          onClick={() => setVideoDuration(sec)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                            videoDuration === sec
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted"
+                          }`}
+                        >
+                          {sec}s
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Audio toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+                    <div>
+                      <Label htmlFor="video-audio" className="text-sm cursor-pointer">Include Audio</Label>
+                      <p className="text-[10px] text-muted-foreground">AI-generated soundtrack (2× cost)</p>
+                    </div>
+                    <Switch id="video-audio" checked={videoAudio} onCheckedChange={setVideoAudio} />
+                  </div>
+
+                  {/* Cost preview */}
+                  <div className="text-center text-sm text-muted-foreground">
+                    Cost: <span className="font-semibold text-foreground">{videoDuration * (videoAudio ? 14 : 7)} credits</span>
+                    <span className="text-xs ml-1">(${((videoDuration * (videoAudio ? 14 : 7)) * 0.05).toFixed(2)})</span>
+                  </div>
+
+                  <Button onClick={handleGenerateVideo} disabled={generatingVideo || !videoPrompt.trim() || (falCredits !== null && falCredits < videoDuration * (videoAudio ? 14 : 7))} className="w-full gap-2">
                     {generatingVideo ? (
                       <><Loader2 className="h-4 w-4 animate-spin" /> {videoStatus || "Generating..."}</>
                     ) : (
                       <><Video className="h-4 w-4" /> Generate Video</>
                     )}
                   </Button>
+                  {falCredits !== null && falCredits < videoDuration * (videoAudio ? 14 : 7) && (
+                    <p className="text-xs text-destructive text-center">Not enough credits for this video</p>
+                  )}
                   <p className="text-xs text-muted-foreground text-center">
-                    Powered by fal.ai • Video generation may take 1-3 minutes
+                    Video generation may take 1-3 minutes
                   </p>
                 </>
               )}

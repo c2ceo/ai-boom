@@ -15,7 +15,12 @@ serve(async (req) => {
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
     if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
-    const { action, prompt, image_url, request_id, model } = await req.json();
+    const { action, prompt, image_url, request_id, model, duration, audio } = await req.json();
+    const videoDuration = Math.min(Math.max(Number(duration) || 5, 3), 10);
+    const withAudio = !!audio;
+    // 7 credits/sec no audio ($0.35), 14 credits/sec with audio ($0.70)
+    const creditsPerSecond = withAudio ? 14 : 7;
+    const totalCredits = videoDuration * creditsPerSecond;
 
     // Check for explicit/NSFW content in prompt
     if (prompt) {
@@ -87,8 +92,8 @@ serve(async (req) => {
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (!credits || credits.credits_remaining < 40) {
-          return new Response(JSON.stringify({ error: "Not enough credits. Video generation costs 40 credits ($2). Purchase more credits to continue.", needs_credits: true }), {
+        if (!credits || credits.credits_remaining < totalCredits) {
+          return new Response(JSON.stringify({ error: `Not enough credits. This video costs ${totalCredits} credits. Purchase more credits to continue.`, needs_credits: true }), {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -96,7 +101,7 @@ serve(async (req) => {
 
         await supabase
           .from("fal_credits")
-          .update({ credits_remaining: credits.credits_remaining - 40, updated_at: new Date().toISOString() })
+          .update({ credits_remaining: credits.credits_remaining - totalCredits, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
       }
     }
@@ -109,6 +114,8 @@ serve(async (req) => {
 
       const input: any = { prompt };
       if (image_url) input.image_url = image_url;
+      if (videoDuration) input.duration = videoDuration;
+      if (withAudio) input.audio = true;
 
       const submitRes = await fetch(`https://queue.fal.run/${videoModel}`, {
         method: "POST",
