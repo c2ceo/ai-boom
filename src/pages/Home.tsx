@@ -134,17 +134,18 @@ const Home = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
-      {/* Media filter tabs */}
-      <div className={`fixed top-3 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border ${filterSide === "right" ? "right-3" : "left-3"}`}>
+      {/* Media filter tabs - vertical, centered on side */}
+      <div className={`fixed top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border ${filterSide === "right" ? "right-3" : "left-3"}`}>
         {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
           <button
             key={filter}
             onClick={() => setMediaFilter(filter)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+            className={`px-3 py-2 rounded-full text-xs font-semibold transition-all writing-mode-vertical ${
               mediaFilter === filter
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
+            style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
           >
             {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
           </button>
