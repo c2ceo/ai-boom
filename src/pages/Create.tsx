@@ -376,72 +376,22 @@ const Create = () => {
                       <video src={preview} controls className="w-full rounded-lg max-h-80 object-cover" />
                     ) : (
                       <img
-                        src={editedPreview || preview}
-                        alt={editedPreview ? "Edited" : "Original"}
+                        src={preview}
+                        alt="Preview"
                         className="w-full rounded-lg max-h-80 object-cover"
                       />
                     )}
-                    {/* Badge */}
-                    {!file?.type?.startsWith("video/") && (
-                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        photoEdited
-                          ? "bg-primary/90 text-primary-foreground"
-                          : "bg-muted/90 text-muted-foreground"
-                      }`}>
-                        {photoEdited ? "✓ AI Edited" : "Original"}
-                      </span>
-                    )}
                     <button
-                      onClick={() => { setFile(null); setPreview(null); setEditedPreview(null); setPhotoEdited(false); setSourceBase64(null); }}
+                      onClick={() => { setFile(null); setPreview(null); }}
                       className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-
-                  {/* AI Edit section - required for images */}
-                  {!file?.type?.startsWith("video/") && (
-                    <div className="space-y-2 border border-border/50 rounded-lg p-3 bg-muted/20">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Wand2 className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">AI Edit Required</span>
-                        {photoEdited && <Check className="h-4 w-4 text-primary ml-auto" />}
-                      </div>
-                      <Textarea
-                        placeholder="Describe how to edit this photo..."
-                        value={editPrompt}
-                        onChange={(e) => setEditPrompt(e.target.value)}
-                        rows={2}
-                        className="resize-none"
-                      />
-                      <div className="flex flex-wrap gap-1.5 mb-1">
-                        {editSuggestions.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => setEditPrompt(s)}
-                            className="px-2 py-1 rounded-full text-[10px] bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 transition-colors"
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                      <Button
-                        onClick={handleApplyEdit}
-                        disabled={editingPhoto || !editPrompt.trim()}
-                        className="w-full gap-2"
-                        size="sm"
-                      >
-                        {editingPhoto ? (
-                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Editing...</>
-                        ) : (
-                          <><Wand2 className="h-3.5 w-3.5" /> {editedPreview ? "Edit Again" : "Apply AI Edit"}</>
-                        )}
-                      </Button>
-                      {!photoEdited && (
-                        <p className="text-[10px] text-muted-foreground text-center">You must apply at least one AI edit before publishing</p>
-                      )}
-                    </div>
-                  )}
+                  <p className="text-xs text-muted-foreground text-center">
+                    <ShieldCheck className="inline h-3 w-3 mr-1" />
+                    AI filter will verify this content when you publish
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-4 py-8">
