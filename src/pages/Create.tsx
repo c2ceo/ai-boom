@@ -56,6 +56,7 @@ const Create = () => {
   const [photoEdited, setPhotoEdited] = useState(false);
   const [sourceBase64, setSourceBase64] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
