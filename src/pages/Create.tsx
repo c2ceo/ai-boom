@@ -210,7 +210,7 @@ const Create = () => {
     try {
       // Step 1: Submit to queue
       const { data: submitData, error: submitError } = await supabase.functions.invoke("generate-video", {
-        body: { action: "submit", prompt: videoPrompt },
+        body: { action: "submit", prompt: videoPrompt, duration: videoDuration, audio: videoAudio },
       });
       if (submitError) throw submitError;
       if (submitData?.error) throw new Error(submitData.error);
