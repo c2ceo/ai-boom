@@ -28,12 +28,15 @@ type PostWithProfile = {
   };
 };
 
+type MediaFilter = "all" | "photos" | "videos";
+
 const Home = () => {
   const [posts, setPosts] = useState<PostWithProfile[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [familyFriendly, setFamilyFriendly] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -117,7 +120,24 @@ const Home = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
-      <div className="fixed top-3 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+      {/* Media filter tabs */}
+      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border">
+        {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
+          <button
+            key={filter}
+            onClick={() => setMediaFilter(filter)}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+              mediaFilter === filter
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
+          </button>
+        ))}
+      </div>
+
+      <div className="fixed top-14 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
         <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
         <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
           <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
@@ -126,24 +146,30 @@ const Home = () => {
       <Button
         variant="outline"
         size="sm"
-        className="fixed top-3 right-14 z-20 rounded-full gap-1.5"
+        className="fixed top-14 right-14 z-20 rounded-full gap-1.5"
         onClick={() => navigate("/subscribe")}
       >
         <Crown className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold text-foreground">Buy Credits</span>
       </Button>
-      {posts.map((post) => (
-        <FeedCard
-          key={post.id}
-          post={post}
-          profile={post.profile}
-          isLiked={likedPosts.has(post.id)}
-          onComment={(postId) => setCommentPostId(postId)}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          onArchive={() => handleArchive()}
-        />
-      ))}
+      {posts
+        .filter((post) => {
+          if (mediaFilter === "photos") return !!post.image_url && !post.video_url;
+          if (mediaFilter === "videos") return !!post.video_url;
+          return true;
+        })
+        .map((post) => (
+          <FeedCard
+            key={post.id}
+            post={post}
+            profile={post.profile}
+            isLiked={likedPosts.has(post.id)}
+            onComment={(postId) => setCommentPostId(postId)}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onArchive={() => handleArchive()}
+          />
+        ))}
       {commentPostId && (
         <CommentSheet
           postId={commentPostId}
