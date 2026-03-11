@@ -15,7 +15,12 @@ serve(async (req) => {
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
     if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
-    const { action, prompt, image_url, request_id, model } = await req.json();
+    const { action, prompt, image_url, request_id, model, duration, audio } = await req.json();
+    const videoDuration = Math.min(Math.max(Number(duration) || 5, 3), 10);
+    const withAudio = !!audio;
+    // 7 credits/sec no audio ($0.35), 14 credits/sec with audio ($0.70)
+    const creditsPerSecond = withAudio ? 14 : 7;
+    const totalCredits = videoDuration * creditsPerSecond;
 
     // Check for explicit/NSFW content in prompt
     if (prompt) {
