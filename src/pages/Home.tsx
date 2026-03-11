@@ -152,18 +152,24 @@ const Home = () => {
         <Crown className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold text-foreground">Buy Credits</span>
       </Button>
-      {posts.map((post) => (
-        <FeedCard
-          key={post.id}
-          post={post}
-          profile={post.profile}
-          isLiked={likedPosts.has(post.id)}
-          onComment={(postId) => setCommentPostId(postId)}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          onArchive={() => handleArchive()}
-        />
-      ))}
+      {posts
+        .filter((post) => {
+          if (mediaFilter === "photos") return !!post.image_url && !post.video_url;
+          if (mediaFilter === "videos") return !!post.video_url;
+          return true;
+        })
+        .map((post) => (
+          <FeedCard
+            key={post.id}
+            post={post}
+            profile={post.profile}
+            isLiked={likedPosts.has(post.id)}
+            onComment={(postId) => setCommentPostId(postId)}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onArchive={() => handleArchive()}
+          />
+        ))}
       {commentPostId && (
         <CommentSheet
           postId={commentPostId}
