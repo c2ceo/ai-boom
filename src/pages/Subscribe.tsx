@@ -7,11 +7,11 @@ import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 
 const CREDIT_PACKS = [
-  { key: "40", credits: 40, price: "$1.99", icon: Zap, accent: "from-blue-500 to-cyan-400" },
-  { key: "200", credits: 200, price: "$9.99", icon: Star, accent: "from-violet-500 to-purple-400", popular: true },
-  { key: "300", credits: 300, price: "$13.99", icon: Sparkles, accent: "from-pink-500 to-rose-400" },
-  { key: "600", credits: 600, price: "$24.99", icon: Flame, accent: "from-orange-500 to-amber-400" },
-  { key: "800", credits: 800, price: "$39.99", icon: Crown, accent: "from-yellow-500 to-yellow-300", best: true },
+  { key: "40", credits: 40, price: "$1.99", perCredit: "$0.050", icon: Zap, accent: "from-blue-500 to-cyan-400" },
+  { key: "225", credits: 225, price: "$9.99", perCredit: "$0.044", save: "12%", icon: Star, accent: "from-violet-500 to-purple-400", popular: true },
+  { key: "375", credits: 375, price: "$13.99", perCredit: "$0.037", save: "25%", icon: Sparkles, accent: "from-pink-500 to-rose-400" },
+  { key: "700", credits: 700, price: "$24.99", perCredit: "$0.036", save: "28%", icon: Flame, accent: "from-orange-500 to-amber-400" },
+  { key: "1100", credits: 1100, price: "$39.99", perCredit: "$0.036", save: "27%", icon: Crown, accent: "from-yellow-500 to-yellow-300", best: true },
 ];
 
 const Subscribe = () => {
