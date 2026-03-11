@@ -185,6 +185,7 @@ const Home = () => {
           onOpenChange={(open) => !open && setCommentPostId(null)}
         />
       )}
+      </div>
     </div>
   );
 };
