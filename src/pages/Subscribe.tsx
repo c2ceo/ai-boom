@@ -85,6 +85,10 @@ const Subscribe = () => {
 
               <div className="flex-1 text-left">
                 <span className="font-semibold text-foreground">{pack.credits} Credits</span>
+                {pack.save && (
+                  <span className="ml-2 text-[10px] font-bold text-green-500">SAVE {pack.save}</span>
+                )}
+                <p className="text-xs text-muted-foreground">{pack.perCredit}/credit</p>
               </div>
 
               <div className="flex items-center gap-2">
