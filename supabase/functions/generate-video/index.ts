@@ -114,6 +114,8 @@ serve(async (req) => {
 
       const input: any = { prompt };
       if (image_url) input.image_url = image_url;
+      if (videoDuration) input.duration = videoDuration;
+      if (withAudio) input.audio = true;
 
       const submitRes = await fetch(`https://queue.fal.run/${videoModel}`, {
         method: "POST",
