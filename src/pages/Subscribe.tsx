@@ -1,55 +1,48 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { initRevenueCat, getRevenueCat } from "@/lib/revenuecat";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const CREDIT_PACKS = [
+  { key: "40", credits: 40, price: "$1.99", icon: Zap, accent: "from-blue-500 to-cyan-400" },
+  { key: "200", credits: 200, price: "$9.99", icon: Star, accent: "from-violet-500 to-purple-400", popular: true },
+  { key: "300", credits: 300, price: "$13.99", icon: Sparkles, accent: "from-pink-500 to-rose-400" },
+  { key: "600", credits: 600, price: "$24.99", icon: Flame, accent: "from-orange-500 to-amber-400" },
+  { key: "800", credits: 800, price: "$39.99", icon: Crown, accent: "from-yellow-500 to-yellow-300", best: true },
+];
 
 const Subscribe = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const paywallRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const [loadingPack, setLoadingPack] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user?.id || !paywallRef.current) return;
-
-    const load = async () => {
-      try {
-        initRevenueCat(user.id);
-        const rc = getRevenueCat();
-        if (!rc) throw new Error("RevenueCat not initialized");
-
-        // Fetch offerings and find the one containing aiboom200cred
-        const offerings = await rc.getOfferings();
-        console.log("RC offerings:", JSON.stringify(offerings, null, 2));
-        console.log("RC all offerings keys:", Object.keys(offerings.all));
-        
-        const targetOffering = Object.values(offerings.all).find((o) =>
-          o.availablePackages.some((pkg) => pkg.identifier === "aiboom200cred")
-        ) ?? offerings.current;
-
-        console.log("RC targetOffering:", targetOffering?.identifier, "packages:", targetOffering?.availablePackages?.map(p => p.identifier));
-
-        if (!targetOffering) throw new Error("No offering found with aiboom200cred package");
-
-        await rc.presentPaywall({
-          htmlTarget: paywallRef.current!,
-          offering: targetOffering,
-        });
-      } catch (e: any) {
-        setError(e?.message || "Failed to load paywall");
-      } finally {
-        setLoading(false);
+  const handlePurchase = async (pack: string) => {
+    if (!user) {
+      toast({ title: "Please sign in first", variant: "destructive" });
+      return;
+    }
+    setLoadingPack(pack);
+    try {
+      const { data, error } = await supabase.functions.invoke("buy-fal-credits", {
+        body: { pack },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
       }
-    };
-
-    load();
-  }, [user?.id]);
+    } catch (e: any) {
+      toast({ title: "Failed to start checkout", description: e.message, variant: "destructive" });
+    } finally {
+      setLoadingPack(null);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <div className="flex items-center gap-3 p-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
@@ -57,22 +50,51 @@ const Subscribe = () => {
         <h1 className="text-xl font-bold">Buy Credits</h1>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
+      <div className="px-4 space-y-3 max-w-md mx-auto">
+        <p className="text-sm text-muted-foreground text-center mb-4">
+          Credits are used to generate AI images and videos.
+        </p>
 
-      {error && (
-        <div className="px-6 py-10 text-center">
-          <p className="text-destructive">{error}</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
-            Go Back
-          </Button>
-        </div>
-      )}
+        {CREDIT_PACKS.map((pack) => {
+          const Icon = pack.icon;
+          const isLoading = loadingPack === pack.key;
 
-      <div ref={paywallRef} className="px-4" />
+          return (
+            <button
+              key={pack.key}
+              onClick={() => handlePurchase(pack.key)}
+              disabled={!!loadingPack}
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:bg-accent/50 transition-all disabled:opacity-60 ${
+                pack.popular ? "ring-2 ring-primary" : ""
+              }`}
+            >
+              {pack.popular && (
+                <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                  Most Popular
+                </span>
+              )}
+              {pack.best && (
+                <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-wider bg-yellow-500 text-black px-2 py-0.5 rounded-full">
+                  Best Value
+                </span>
+              )}
+
+              <div className={`flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br ${pack.accent} flex items-center justify-center`}>
+                <Icon className="h-5 w-5 text-white" />
+              </div>
+
+              <div className="flex-1 text-left">
+                <span className="font-semibold text-foreground">{pack.credits} Credits</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-foreground">{pack.price}</span>
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

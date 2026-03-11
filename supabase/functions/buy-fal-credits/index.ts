@@ -7,6 +7,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const CREDIT_PACKS: Record<string, { price_id: string; credits: number }> = {
+  "40":  { price_id: "price_1T9hsiKmrRuzdi0WdwGGuAsc", credits: 40 },
+  "200": { price_id: "price_1T9hsuKmrRuzdi0WuVn0PoAC", credits: 200 },
+  "300": { price_id: "price_1T9hsvKmrRuzdi0W3y6nLILv", credits: 300 },
+  "600": { price_id: "price_1T9hswKmrRuzdi0W33WBJi1m", credits: 600 },
+  "800": { price_id: "price_1T9hsxKmrRuzdi0WAd1BX5Zy", credits: 800 },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,6 +32,10 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    const { pack } = await req.json();
+    const selectedPack = CREDIT_PACKS[pack];
+    if (!selectedPack) throw new Error("Invalid credit pack");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
@@ -37,18 +49,13 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: "price_1T5uqW3aOoTx7uddswF2gWQY",
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: selectedPack.price_id, quantity: 1 }],
       mode: "payment",
       success_url: `${req.headers.get("origin")}/create?credits_purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/create`,
+      cancel_url: `${req.headers.get("origin")}/subscribe`,
       metadata: {
         user_id: user.id,
-        credit_amount: "20",
+        credit_amount: String(selectedPack.credits),
       },
     });
 
