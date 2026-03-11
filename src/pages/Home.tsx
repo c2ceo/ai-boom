@@ -28,12 +28,15 @@ type PostWithProfile = {
   };
 };
 
+type MediaFilter = "all" | "photos" | "videos";
+
 const Home = () => {
   const [posts, setPosts] = useState<PostWithProfile[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [familyFriendly, setFamilyFriendly] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
