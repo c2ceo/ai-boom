@@ -51,6 +51,9 @@ const Subscribe = () => {
       </div>
 
       <div className="px-4 space-y-3 max-w-md mx-auto">
+        <div className="bg-primary/10 border border-primary/20 rounded-xl px-4 py-2.5 text-center mb-4">
+          <span className="text-sm font-semibold text-primary">💰 Credits are cheaper on AI-BOOM.com</span>
+        </div>
         <p className="text-sm text-muted-foreground text-center mb-4">
           Credits are used to generate AI images and videos.
         </p>
