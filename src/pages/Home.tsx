@@ -4,11 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
-import { Sparkles, ShieldCheck, Crown } from "lucide-react";
+import { Sparkles, ShieldCheck, Crown, MoreVertical, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type PostWithProfile = {
   id: string;
