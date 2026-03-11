@@ -46,6 +46,8 @@ const Create = () => {
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const [videoStatus, setVideoStatus] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(5);
+  const [videoAudio, setVideoAudio] = useState(false);
 
   // AI photo edit state for uploads
   const [editPrompt, setEditPrompt] = useState("");
