@@ -4,11 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FeedCard from "@/components/FeedCard";
 import CommentSheet from "@/components/CommentSheet";
-import { Sparkles, ShieldCheck, Crown } from "lucide-react";
+import { Sparkles, ShieldCheck, Crown, MoreVertical, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type PostWithProfile = {
   id: string;
@@ -37,6 +43,14 @@ const Home = () => {
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [familyFriendly, setFamilyFriendly] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
+  const [filterSide, setFilterSide] = useState<"left" | "right">(() => {
+    return (localStorage.getItem("filterSide") as "left" | "right") || "right";
+  });
+  const toggleFilterSide = () => {
+    const newSide = filterSide === "right" ? "left" : "right";
+    setFilterSide(newSide);
+    localStorage.setItem("filterSide", newSide);
+  };
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -121,7 +135,7 @@ const Home = () => {
   return (
     <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
       {/* Media filter tabs */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border">
+      <div className={`fixed top-3 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border ${filterSide === "right" ? "right-3" : "left-3"}`}>
         {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
           <button
             key={filter}
@@ -135,6 +149,19 @@ const Home = () => {
             {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
           </button>
         ))}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align={filterSide === "right" ? "end" : "start"}>
+            <DropdownMenuItem onClick={toggleFilterSide} className="gap-2">
+              <ArrowLeftRight className="h-4 w-4" />
+              Move to {filterSide === "right" ? "left" : "right"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="fixed top-14 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
