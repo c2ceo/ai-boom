@@ -309,6 +309,7 @@ const Create = () => {
 
       // Run AI filter on uploaded images (skip for videos and in-app generated)
       let verifiedAi = mode === "generate" || mode === "video";
+      let filterResult: { is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null = null;
 
       if (mode === "upload" && !isVideo && uploadedUrl) {
         setChecking(true);
@@ -317,6 +318,7 @@ const Create = () => {
             body: { imageUrl: uploadedUrl },
           });
           if (!filterError && filterData) {
+            filterResult = filterData;
             setAiCheckResult(filterData);
             verifiedAi = filterData.is_ai_generated && filterData.confidence >= 0.7;
           }
@@ -327,7 +329,7 @@ const Create = () => {
         }
       }
 
-      const isFamilyFriendly = aiCheckResult?.is_family_friendly !== false;
+      const isFamilyFriendly = filterResult ? filterResult.is_family_friendly !== false : true;
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
