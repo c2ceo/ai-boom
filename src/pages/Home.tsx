@@ -42,7 +42,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [familyFriendly, setFamilyFriendly] = useState(false);
-  const [mediaFilter, setMediaFilter] = useState<MediaFilter>("all");
+  const [filterSide, setFilterSide] = useState<"left" | "right">(() => {
+    return (localStorage.getItem("filterSide") as "left" | "right") || "right";
+  });
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
