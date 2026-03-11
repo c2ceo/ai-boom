@@ -681,7 +681,30 @@ const Create = () => {
       {/* Shared fields */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label>Caption</Label>
+          <div className="flex items-center justify-between">
+            <Label>Caption</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1.5 text-muted-foreground"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  if (text.trim()) {
+                    setCaption(text.trim());
+                    toast({ title: "Prompt pasted to caption ✨" });
+                  } else {
+                    toast({ title: "Clipboard is empty", variant: "destructive" });
+                  }
+                } catch {
+                  toast({ title: "Clipboard access denied", description: "Please allow clipboard access in your browser.", variant: "destructive" });
+                }
+              }}
+            >
+              📋 Paste prompt to caption
+            </Button>
+          </div>
           <Textarea
             placeholder="What's the story behind this creation?"
             value={caption}
