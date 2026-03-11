@@ -92,8 +92,8 @@ serve(async (req) => {
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (!credits || credits.credits_remaining < 40) {
-          return new Response(JSON.stringify({ error: "Not enough credits. Video generation costs 40 credits ($2). Purchase more credits to continue.", needs_credits: true }), {
+        if (!credits || credits.credits_remaining < totalCredits) {
+          return new Response(JSON.stringify({ error: `Not enough credits. This video costs ${totalCredits} credits. Purchase more credits to continue.`, needs_credits: true }), {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -101,7 +101,7 @@ serve(async (req) => {
 
         await supabase
           .from("fal_credits")
-          .update({ credits_remaining: credits.credits_remaining - 40, updated_at: new Date().toISOString() })
+          .update({ credits_remaining: credits.credits_remaining - totalCredits, updated_at: new Date().toISOString() })
           .eq("user_id", userId);
       }
     }
