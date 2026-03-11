@@ -17,3 +17,18 @@ verify_jwt = false
 
 [functions.edit-photo]
 verify_jwt = false
+
+[functions.generate-video]
+verify_jwt = false
+
+[functions.buy-fal-credits]
+verify_jwt = false
+
+[functions.dev-autologin]
+verify_jwt = false
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.verify-fal-payment]
+verify_jwt = false

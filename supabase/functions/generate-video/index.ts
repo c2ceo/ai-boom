@@ -33,14 +33,17 @@ serve(async (req) => {
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
 
       const authHeader = req.headers.get("Authorization");
-      if (!authHeader) throw new Error("Authentication required");
+      if (!authHeader?.startsWith("Bearer ")) throw new Error("Authentication required");
       const token = authHeader.replace("Bearer ", "");
-      const { data: authData } = await anonClient.auth.getUser(token);
-      const userId = authData.user?.id;
-      if (!userId) throw new Error("User not authenticated");
+
+      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) throw new Error("User not authenticated");
+      const userId = claimsData.claims.sub as string;
 
       // Check if user is among first 10 accounts and has free generations this month
       const currentMonth = new Date().toISOString().slice(0, 7);
