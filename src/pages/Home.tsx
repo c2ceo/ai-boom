@@ -119,39 +119,47 @@ const Home = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
-      {/* Media filter tabs */}
-      <div className="fixed top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border">
-        {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
-          <button
-            key={filter}
-            onClick={() => setMediaFilter(filter)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              mediaFilter === filter
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Fixed header controls */}
+      <div className="flex-shrink-0 px-3 pt-3 pb-2 space-y-2 bg-background z-20">
+        <div className="flex justify-center">
+          <div className="flex items-center gap-1 bg-muted rounded-full px-1 py-1">
+            {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setMediaFilter(filter)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  mediaFilter === filter
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+            <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
+            <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
+            </Label>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full gap-1.5"
+            onClick={() => navigate("/subscribe")}
           >
-            {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
-          </button>
-        ))}
+            <Crown className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Buy Credits</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="fixed top-14 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
-        <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
-        <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
-        </Label>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="fixed top-14 right-14 z-20 rounded-full gap-1.5"
-        onClick={() => navigate("/subscribe")}
-      >
-        <Crown className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold text-foreground">Buy Credits</span>
-      </Button>
+      {/* Scrollable feed */}
+      <div className="flex-1 overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
       {posts
         .filter((post) => {
           if (mediaFilter === "photos") return !!post.image_url && !post.video_url;
