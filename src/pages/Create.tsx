@@ -397,8 +397,8 @@ const Create = () => {
                 <div className="flex flex-col items-center gap-4 py-8">
                   <ImageIcon className="h-10 w-10 text-muted-foreground" />
                   <div className="text-center">
-                    <span className="text-sm text-muted-foreground">Upload a photo to edit with AI</span>
-                    <p className="text-xs text-muted-foreground/70 mt-1">Photos require an AI edit before posting</p>
+                    <span className="text-sm text-muted-foreground">Upload a photo or video</span>
+                    <p className="text-xs text-muted-foreground/70 mt-1">Non-AI content will be sent to community vote</p>
                   </div>
                     <div className="flex gap-3">
                     <Button variant="outline" className="gap-2" onClick={() => galleryInputRef.current?.click()}>
