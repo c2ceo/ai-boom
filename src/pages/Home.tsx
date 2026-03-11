@@ -168,21 +168,43 @@ const Home = () => {
         </DropdownMenu>
       </div>
 
-      <div className="fixed top-14 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
-        <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
-        <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
-        </Label>
-      </div>
       <Button
-        variant="outline"
-        size="sm"
-        className="fixed top-14 right-14 z-20 rounded-full gap-1.5"
-        onClick={() => navigate("/subscribe")}
+        variant="ghost"
+        size="icon"
+        className="fixed top-3 right-12 z-50 h-8 w-8 rounded-full"
+        onClick={() => {
+          const next = !hideControls;
+          setHideControls(next);
+          localStorage.setItem("hideHomeControls", String(next));
+        }}
+        aria-label="Toggle controls visibility"
       >
-        <Crown className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold text-foreground">Buy Credits</span>
+        {hideControls ? (
+          <EyeOff className="h-4 w-4 text-foreground" />
+        ) : (
+          <Eye className="h-4 w-4 text-foreground" />
+        )}
       </Button>
+
+      {!hideControls && (
+        <>
+          <div className="fixed top-14 left-3 z-20 flex items-center gap-2 bg-background/60 backdrop-blur-sm rounded-full px-3 py-1.5">
+            <Switch id="ff-home" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
+            <Label htmlFor="ff-home" className="flex items-center gap-1 text-sm font-semibold cursor-pointer text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
+            </Label>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="fixed top-14 right-14 z-20 rounded-full gap-1.5"
+            onClick={() => navigate("/subscribe")}
+          >
+            <Crown className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Buy Credits</span>
+          </Button>
+        </>
+      )}
       {posts
         .filter((post) => {
           if (mediaFilter === "photos") return !!post.image_url && !post.video_url;
