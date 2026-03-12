@@ -31,6 +31,9 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
