@@ -20,6 +20,7 @@ const Subscribe = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
 
   const handlePurchase = async (pack: string) => {
     if (!user) {
