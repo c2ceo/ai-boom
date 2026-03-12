@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles, ShieldCheck, Users } from "lucide-react";
+import { Search, Sparkles, Users } from "lucide-react";
+import FamilyFriendlyToggle from "@/components/FamilyFriendlyToggle";
 import { useNavigate } from "react-router-dom";
 import BombThumbnail from "@/components/BombThumbnail";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -116,12 +115,12 @@ const Explore = () => {
                 </Badge>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Switch id="ff-explore" checked={familyFriendly} onCheckedChange={setFamilyFriendly} />
-              <Label htmlFor="ff-explore" className="flex items-center gap-1 text-sm font-semibold cursor-pointer whitespace-nowrap text-foreground">
-                <ShieldCheck className="h-4 w-4 text-primary" /> {familyFriendly ? "Family Friendly" : "Unfriendly"}
-              </Label>
-            </div>
+            <FamilyFriendlyToggle
+              id="ff-explore"
+              checked={familyFriendly}
+              onCheckedChange={setFamilyFriendly}
+              className="flex items-center gap-1.5 shrink-0"
+            />
           </div>
 
           {/* Grid */}
