@@ -47,6 +47,7 @@ const Profile = () => {
   const [showFollowList, setShowFollowList] = useState(false);
   const [followRequestPending, setFollowRequestPending] = useState(false);
   const [isPrivateAndNotFollowing, setIsPrivateAndNotFollowing] = useState(false);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
