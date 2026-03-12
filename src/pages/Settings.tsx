@@ -120,6 +120,33 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showPasswordSetup} onOpenChange={(open) => { setShowPasswordSetup(open); if (!open) { setNewPassword(""); setConfirmPassword(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{hasPassword ? "Change" : "Set"} Parental Password</DialogTitle>
+            <DialogDescription>
+              This password will be required to disable the Family Friendly filter.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>New Password</Label>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 4 characters" />
+            </div>
+            <div>
+              <Label>Confirm Password</Label>
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" onKeyDown={(e) => e.key === "Enter" && handleSavePassword()} />
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            {hasPassword && (
+              <Button variant="destructive" onClick={handleRemovePassword}>Remove Password</Button>
+            )}
+            <Button onClick={handleSavePassword}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
