@@ -87,6 +87,8 @@ const AppRoutes = () => {
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
       <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />
+      <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
+      <Route path="/terms" element={<AppLayout><TermsOfService /></AppLayout>} />
       <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
       <Route path="/messages/:conversationId" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
       <Route path="/post/:postId" element={<AppLayout><PostView /></AppLayout>} />
