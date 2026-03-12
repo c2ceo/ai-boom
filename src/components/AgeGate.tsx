@@ -53,9 +53,11 @@ const AgeGate = ({ children }: { children: React.ReactNode }) => {
         <div className="space-y-2 text-left">
           <Label>Birth Year</Label>
           <Input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
             value={birthYear}
-            onChange={(e) => { setBirthYear(e.target.value); setError(""); }}
+            onChange={(e) => { setBirthYear(e.target.value.replace(/\D/g, "")); setError(""); }}
             placeholder="e.g. 2005"
             onKeyDown={(e) => e.key === "Enter" && handleVerify()}
           />
