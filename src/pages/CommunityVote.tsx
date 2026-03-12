@@ -148,7 +148,15 @@ const CommunityVote = () => {
   return (
     <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
       <div className="flex items-center gap-2 mb-4">
-        <ShieldAlert className="h-6 w-6 text-accent" />
+        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="shield-half" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="50%" stopColor="hsl(142, 71%, 45%)" />
+              <stop offset="50%" stopColor="hsl(0, 84%, 60%)" />
+            </linearGradient>
+          </defs>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="url(#shield-half)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
         <h1 className="text-2xl font-bold">Community Vote</h1>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
