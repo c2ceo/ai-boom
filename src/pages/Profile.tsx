@@ -356,6 +356,9 @@ const Profile = () => {
                 <DropdownMenuItem onClick={handleReport} className="gap-2 text-destructive focus:text-destructive">
                   <Flag className="h-4 w-4" /> Report Account
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowGiftDialog(true)} className="gap-2">
+                  <Gift className="h-4 w-4" /> Gift Credits
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
