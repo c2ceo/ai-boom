@@ -105,7 +105,7 @@ const Settings = () => {
     { icon: User, label: "Edit Profile", onClick: () => navigate("/edit-profile") },
     { icon: Bell, label: "Notifications", onClick: () => navigate("/notifications") },
     { icon: Shield, label: "Privacy", onClick: () => navigate("/privacy") },
-    { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => setShowPasswordSetup(true) },
+    { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => { if (hasPassword) { setShowPasswordSetup(true); } else { setShowAgeVerify(true); } } },
     { icon: FileText, label: "Privacy Policy", onClick: () => navigate("/privacy-policy") },
     { icon: ScrollText, label: "Terms of Service", onClick: () => navigate("/terms") },
     { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
