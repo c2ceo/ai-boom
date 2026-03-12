@@ -71,6 +71,7 @@ const Settings = () => {
     { icon: Bell, label: "Notifications", onClick: () => navigate("/notifications") },
     { icon: Shield, label: "Privacy", onClick: () => navigate("/privacy") },
     { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
+    { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => setShowPasswordSetup(true) },
   ];
 
   return (
