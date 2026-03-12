@@ -315,6 +315,22 @@ const Create = () => {
       }
 
       const isFamilyFriendly = filterResult ? filterResult.is_family_friendly !== false : true;
+
+      if (!isFamilyFriendly) {
+        // Delete the uploaded file since we're rejecting the post
+        if (uploadedUrl) {
+          const path = uploadedUrl.split("/media/")[1];
+          if (path) await supabase.storage.from("media").remove([path]);
+        }
+        toast({
+          title: "Upload rejected",
+          description: "Nudity and explicit content are strictly prohibited on AI-BOOM.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
