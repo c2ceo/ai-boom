@@ -458,6 +458,16 @@ const Profile = () => {
           type={followListType}
         />
       )}
+
+      {!isOwnProfile && targetUserId && (
+        <GiftCreditsDialog
+          open={showGiftDialog}
+          onOpenChange={setShowGiftDialog}
+          recipientUserId={targetUserId}
+          recipientUsername={profile?.username}
+          recipientAvatarUrl={profile?.avatar_url}
+        />
+      )}
     </div>
   );
 };
