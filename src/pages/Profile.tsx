@@ -338,6 +338,13 @@ const Profile = () => {
             >
               <MessageCircle className="h-4 w-4" />
             </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setShowGiftDialog(true)}
+            >
+              <Gift className="h-4 w-4" />
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon">
@@ -355,9 +362,6 @@ const Profile = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleReport} className="gap-2 text-destructive focus:text-destructive">
                   <Flag className="h-4 w-4" /> Report Account
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowGiftDialog(true)} className="gap-2">
-                  <Gift className="h-4 w-4" /> Gift Credits
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
