@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import GiftCreditsDialog from "@/components/GiftCreditsDialog";
 
 const CREDIT_PACKS = [
   { key: "40", credits: 40, price: "$1.99", perCredit: "$0.050", icon: Zap, accent: "from-blue-500 to-cyan-400" },
