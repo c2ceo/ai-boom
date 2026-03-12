@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import DevToggle from "@/components/DevToggle";
+import AgeGate from "@/components/AgeGate";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import Create from "./pages/Create";
@@ -19,6 +20,8 @@ import Auth from "./pages/Auth";
 import PostView from "./pages/PostView";
 import Settings from "./pages/Settings";
 import Privacy from "./pages/Privacy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import ResetPassword from "./pages/ResetPassword";
 import Messages from "./pages/Messages";
 import Conversation from "./pages/Conversation";
@@ -84,6 +87,8 @@ const AppRoutes = () => {
       <Route path="/edit-profile" element={<ProtectedRoute><AppLayout><EditProfile /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
       <Route path="/privacy" element={<AppLayout><Privacy /></AppLayout>} />
+      <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
+      <Route path="/terms" element={<AppLayout><TermsOfService /></AppLayout>} />
       <Route path="/messages" element={<ProtectedRoute><AppLayout><Messages /></AppLayout></ProtectedRoute>} />
       <Route path="/messages/:conversationId" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
       <Route path="/post/:postId" element={<AppLayout><PostView /></AppLayout>} />
@@ -102,7 +107,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <AppRoutes />
+            <AgeGate>
+              <AppRoutes />
+            </AgeGate>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock } from "lucide-react";
+import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock, Trash2, FileText, ScrollText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,9 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -66,12 +70,42 @@ const Settings = () => {
     navigate("/auth");
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      await signOut();
+      navigate("/auth");
+      toast({ title: "Account deleted", description: "Your account and all data have been permanently removed." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   const items = [
     { icon: User, label: "Edit Profile", onClick: () => navigate("/edit-profile") },
     { icon: Bell, label: "Notifications", onClick: () => navigate("/notifications") },
     { icon: Shield, label: "Privacy", onClick: () => navigate("/privacy") },
-    { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
     { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => setShowPasswordSetup(true) },
+    { icon: FileText, label: "Privacy Policy", onClick: () => navigate("/privacy-policy") },
+    { icon: ScrollText, label: "Terms of Service", onClick: () => navigate("/terms") },
+    { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
   ];
 
   return (
@@ -96,13 +130,20 @@ const Settings = () => {
         ))}
       </div>
 
-      <div className="mt-8 border-t border-border pt-4">
+      <div className="mt-8 border-t border-border pt-4 space-y-1">
         <button
           onClick={() => setShowSignOutDialog(true)}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
         >
           <LogOut className="h-5 w-5" />
           Sign Out
+        </button>
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <Trash2 className="h-5 w-5" />
+          Delete Account
         </button>
       </div>
 
@@ -117,6 +158,32 @@ const Settings = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>No</AlertDialogCancel>
             <AlertDialogAction onClick={handleSignOut}>Yes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => { setShowDeleteDialog(open); if (!open) setDeleteConfirmText(""); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete your account and all your data including posts, comments, and messages. This action cannot be undone. Type <strong>DELETE</strong> to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder='Type "DELETE" to confirm'
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== "DELETE" || deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete Forever"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
