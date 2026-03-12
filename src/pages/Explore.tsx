@@ -6,8 +6,6 @@ import { Search, Sparkles, Users } from "lucide-react";
 import FamilyFriendlyToggle from "@/components/FamilyFriendlyToggle";
 import { useNavigate } from "react-router-dom";
 import BombThumbnail from "@/components/BombThumbnail";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

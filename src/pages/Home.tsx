@@ -8,8 +8,6 @@ import { Sparkles, Crown, MoreVertical, ArrowLeftRight, Eye, EyeOff } from "luci
 import FamilyFriendlyToggle from "@/components/FamilyFriendlyToggle";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
