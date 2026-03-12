@@ -34,7 +34,10 @@ const Settings = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [showAgeVerify, setShowAgeVerify] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+  const [ageInput, setAgeInput] = useState("");
+  const [ageError, setAgeError] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const hasPassword = !!localStorage.getItem("ff_password");
@@ -102,7 +105,7 @@ const Settings = () => {
     { icon: User, label: "Edit Profile", onClick: () => navigate("/edit-profile") },
     { icon: Bell, label: "Notifications", onClick: () => navigate("/notifications") },
     { icon: Shield, label: "Privacy", onClick: () => navigate("/privacy") },
-    { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => setShowPasswordSetup(true) },
+    { icon: Lock, label: hasPassword ? "Change Parental Password" : "Set Parental Password", onClick: () => { if (hasPassword) { setShowPasswordSetup(true); } else { setShowAgeVerify(true); } } },
     { icon: FileText, label: "Privacy Policy", onClick: () => navigate("/privacy-policy") },
     { icon: ScrollText, label: "Terms of Service", onClick: () => navigate("/terms") },
     { icon: HelpCircle, label: "Help & Support", onClick: () => window.location.href = "mailto:gregcampbellc2c@icloud.com" },
@@ -187,6 +190,61 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Age Verification before password setup */}
+      <Dialog open={showAgeVerify} onOpenChange={(open) => { setShowAgeVerify(open); if (!open) { setAgeInput(""); setAgeError(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Age Verification</DialogTitle>
+            <DialogDescription>
+              You must be 18 or older to set a parental control password. Please enter your birth year.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Birth Year</Label>
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={ageInput}
+              onChange={(e) => { setAgeInput(e.target.value.replace(/\D/g, "")); setAgeError(""); }}
+              placeholder="e.g. 1990"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const year = parseInt(ageInput);
+                  const age = new Date().getFullYear() - year;
+                  if (isNaN(year) || year < 1900 || year > new Date().getFullYear()) {
+                    setAgeError("Please enter a valid birth year.");
+                  } else if (age < 18) {
+                    setAgeError("You must be at least 18 to set a parental password.");
+                  } else {
+                    setShowAgeVerify(false);
+                    setAgeInput("");
+                    setShowPasswordSetup(true);
+                  }
+                }
+              }}
+            />
+            {ageError && <p className="text-xs text-destructive">{ageError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowAgeVerify(false); setAgeInput(""); setAgeError(""); }}>Cancel</Button>
+            <Button onClick={() => {
+              const year = parseInt(ageInput);
+              const age = new Date().getFullYear() - year;
+              if (isNaN(year) || year < 1900 || year > new Date().getFullYear()) {
+                setAgeError("Please enter a valid birth year.");
+              } else if (age < 18) {
+                setAgeError("You must be at least 18 to set a parental password.");
+              } else {
+                setShowAgeVerify(false);
+                setAgeInput("");
+                setShowPasswordSetup(true);
+              }
+            }} disabled={!ageInput}>Verify</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showPasswordSetup} onOpenChange={(open) => { setShowPasswordSetup(open); if (!open) { setNewPassword(""); setConfirmPassword(""); } }}>
         <DialogContent className="sm:max-w-md">

@@ -110,9 +110,11 @@ const FamilyFriendlyToggle = ({ id, checked, onCheckedChange, className }: Famil
           <div className="space-y-3">
             <Label>{ageQuestion.question}</Label>
             <Input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
               value={ageAnswer}
-              onChange={(e) => setAgeAnswer(e.target.value)}
+              onChange={(e) => setAgeAnswer(e.target.value.replace(/\D/g, ""))}
               placeholder="Enter your answer"
               onKeyDown={(e) => e.key === "Enter" && handleAgeSubmit()}
             />
