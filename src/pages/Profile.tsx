@@ -26,6 +26,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import FollowListSheet from "@/components/FollowListSheet";
+import GiftCreditsDialog from "@/components/GiftCreditsDialog";
 
 const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
 
