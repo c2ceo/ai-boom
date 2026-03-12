@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Sparkles, Users } from "lucide-react";
+import { Sparkles, Users } from "lucide-react";
+import SearchWithHistory from "@/components/SearchWithHistory";
 import FamilyFriendlyToggle from "@/components/FamilyFriendlyToggle";
 import { useNavigate } from "react-router-dom";
 import BombThumbnail from "@/components/BombThumbnail";
