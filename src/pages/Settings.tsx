@@ -130,13 +130,20 @@ const Settings = () => {
         ))}
       </div>
 
-      <div className="mt-8 border-t border-border pt-4">
+      <div className="mt-8 border-t border-border pt-4 space-y-1">
         <button
           onClick={() => setShowSignOutDialog(true)}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
         >
           <LogOut className="h-5 w-5" />
           Sign Out
+        </button>
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <Trash2 className="h-5 w-5" />
+          Delete Account
         </button>
       </div>
 
