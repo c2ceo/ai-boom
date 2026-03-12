@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,11 +15,51 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const hasPassword = !!localStorage.getItem("ff_password");
+
+  const handleSavePassword = () => {
+    if (!newPassword) {
+      toast({ title: "Password required", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 4) {
+      toast({ title: "Password must be at least 4 characters", variant: "destructive" });
+      return;
+    }
+    localStorage.setItem("ff_password", newPassword);
+    setShowPasswordSetup(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    toast({ title: "Parental password set", description: "The family filter now requires a password to disable." });
+  };
+
+  const handleRemovePassword = () => {
+    localStorage.removeItem("ff_password");
+    setShowPasswordSetup(false);
+    toast({ title: "Parental password removed" });
+  };
 
   const handleSignOut = async () => {
     await signOut();
