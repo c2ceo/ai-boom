@@ -34,7 +34,10 @@ const Settings = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [showAgeVerify, setShowAgeVerify] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
+  const [ageInput, setAgeInput] = useState("");
+  const [ageError, setAgeError] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const hasPassword = !!localStorage.getItem("ff_password");
