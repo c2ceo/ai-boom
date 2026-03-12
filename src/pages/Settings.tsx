@@ -191,6 +191,61 @@ const Settings = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Age Verification before password setup */}
+      <Dialog open={showAgeVerify} onOpenChange={(open) => { setShowAgeVerify(open); if (!open) { setAgeInput(""); setAgeError(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Age Verification</DialogTitle>
+            <DialogDescription>
+              You must be 18 or older to set a parental control password. Please enter your birth year.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Birth Year</Label>
+            <Input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={ageInput}
+              onChange={(e) => { setAgeInput(e.target.value.replace(/\D/g, "")); setAgeError(""); }}
+              placeholder="e.g. 1990"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const year = parseInt(ageInput);
+                  const age = new Date().getFullYear() - year;
+                  if (isNaN(year) || year < 1900 || year > new Date().getFullYear()) {
+                    setAgeError("Please enter a valid birth year.");
+                  } else if (age < 18) {
+                    setAgeError("You must be at least 18 to set a parental password.");
+                  } else {
+                    setShowAgeVerify(false);
+                    setAgeInput("");
+                    setShowPasswordSetup(true);
+                  }
+                }
+              }}
+            />
+            {ageError && <p className="text-xs text-destructive">{ageError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowAgeVerify(false); setAgeInput(""); setAgeError(""); }}>Cancel</Button>
+            <Button onClick={() => {
+              const year = parseInt(ageInput);
+              const age = new Date().getFullYear() - year;
+              if (isNaN(year) || year < 1900 || year > new Date().getFullYear()) {
+                setAgeError("Please enter a valid birth year.");
+              } else if (age < 18) {
+                setAgeError("You must be at least 18 to set a parental password.");
+              } else {
+                setShowAgeVerify(false);
+                setAgeInput("");
+                setShowPasswordSetup(true);
+              }
+            }} disabled={!ageInput}>Verify</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPasswordSetup} onOpenChange={(open) => { setShowPasswordSetup(open); if (!open) { setNewPassword(""); setConfirmPassword(""); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
