@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.verify-fal-payment]
 verify_jwt = false
+
+[functions.gift-credits]
+verify_jwt = false

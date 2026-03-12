@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban, Lock, MessageCircle } from "lucide-react";
+import { Sparkles, Settings, Grid3X3, Trash2, X, CheckCircle, MoreVertical, UserX, Flag, Ban, Lock, MessageCircle, Gift } from "lucide-react";
 import BombThumbnail from "@/components/BombThumbnail";
 import ThemeToggle from "@/components/ThemeToggle";
 import {
@@ -26,6 +26,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import FollowListSheet from "@/components/FollowListSheet";
+import GiftCreditsDialog from "@/components/GiftCreditsDialog";
 
 const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
 
@@ -46,6 +47,7 @@ const Profile = () => {
   const [showFollowList, setShowFollowList] = useState(false);
   const [followRequestPending, setFollowRequestPending] = useState(false);
   const [isPrivateAndNotFollowing, setIsPrivateAndNotFollowing] = useState(false);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
 
   const isOwnProfile = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -354,6 +356,9 @@ const Profile = () => {
                 <DropdownMenuItem onClick={handleReport} className="gap-2 text-destructive focus:text-destructive">
                   <Flag className="h-4 w-4" /> Report Account
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowGiftDialog(true)} className="gap-2">
+                  <Gift className="h-4 w-4" /> Gift Credits
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -451,6 +456,16 @@ const Profile = () => {
           onOpenChange={setShowFollowList}
           userId={targetUserId}
           type={followListType}
+        />
+      )}
+
+      {!isOwnProfile && targetUserId && (
+        <GiftCreditsDialog
+          open={showGiftDialog}
+          onOpenChange={setShowGiftDialog}
+          recipientUserId={targetUserId}
+          recipientUsername={profile?.username}
+          recipientAvatarUrl={profile?.avatar_url}
         />
       )}
     </div>

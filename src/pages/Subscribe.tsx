@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Zap, Star, Flame, Crown, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import GiftCreditsDialog from "@/components/GiftCreditsDialog";
 
 const CREDIT_PACKS = [
   { key: "40", credits: 40, price: "$1.99", perCredit: "$0.050", icon: Zap, accent: "from-blue-500 to-cyan-400" },
@@ -19,6 +20,7 @@ const Subscribe = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [showGiftDialog, setShowGiftDialog] = useState(false);
 
   const handlePurchase = async (pack: string) => {
     if (!user) {
@@ -101,7 +103,24 @@ const Subscribe = () => {
             </button>
           );
         })}
+
+        <Button
+          variant="outline"
+          className="w-full mt-4 gap-2"
+          onClick={() => {
+            if (!user) {
+              toast({ title: "Please sign in first", variant: "destructive" });
+              return;
+            }
+            setShowGiftDialog(true);
+          }}
+        >
+          <Gift className="h-4 w-4" />
+          Gift Credits to a Friend
+        </Button>
       </div>
+
+      <GiftCreditsDialog open={showGiftDialog} onOpenChange={setShowGiftDialog} />
     </div>
   );
 };
