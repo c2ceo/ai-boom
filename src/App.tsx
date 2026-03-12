@@ -107,7 +107,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <AppRoutes />
+            <AgeGate>
+              <AppRoutes />
+            </AgeGate>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
