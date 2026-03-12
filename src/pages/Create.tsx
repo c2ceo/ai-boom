@@ -327,7 +327,7 @@ const Create = () => {
           description: "Nudity and explicit content are strictly prohibited on AI-BOOM.",
           variant: "destructive",
         });
-        setUploading(false);
+        setLoading(false);
         return;
       }
 
