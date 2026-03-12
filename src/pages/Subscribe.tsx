@@ -103,7 +103,24 @@ const Subscribe = () => {
             </button>
           );
         })}
+
+        <Button
+          variant="outline"
+          className="w-full mt-4 gap-2"
+          onClick={() => {
+            if (!user) {
+              toast({ title: "Please sign in first", variant: "destructive" });
+              return;
+            }
+            setShowGiftDialog(true);
+          }}
+        >
+          <Gift className="h-4 w-4" />
+          Gift Credits to a Friend
+        </Button>
       </div>
+
+      <GiftCreditsDialog open={showGiftDialog} onOpenChange={setShowGiftDialog} />
     </div>
   );
 };
