@@ -321,12 +321,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-popover z-50">
-                  {originalImageUrl && originalImageUrl !== currentImageUrl && (
-                    <DropdownMenuItem onClick={handleRevert} disabled={reverting}>
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      {reverting ? "Reverting..." : "Revert to original"}
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick={() => onEdit?.(post.id)}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit
