@@ -148,15 +148,12 @@ const Explore = () => {
         <TabsContent value="accounts">
           {/* Account Search */}
           <div className="px-4 mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search accounts..."
-                value={accountSearch}
-                onChange={(e) => setAccountSearch(e.target.value)}
-                className="pl-10 bg-secondary/50 border-border/50"
-              />
-            </div>
+            <SearchWithHistory
+              value={accountSearch}
+              onChange={setAccountSearch}
+              placeholder="Search accounts..."
+              storageKey="aiboom_explore_accounts_history"
+            />
           </div>
 
           {accountsLoading ? (
