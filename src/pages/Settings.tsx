@@ -5,9 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock, Trash2, FileText, ScrollText, BarChart3, Activity } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { useTrackingConsent } from "@/hooks/useTrackingConsent";
+import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock, Trash2, FileText, ScrollText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
