@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock, Trash2, FileText, ScrollText } from "lucide-react";
+import { ArrowLeft, User, LogOut, Shield, Bell, HelpCircle, Lock, Trash2, FileText, ScrollText, BarChart3, Activity } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useTrackingConsent } from "@/hooks/useTrackingConsent";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +32,7 @@ const Settings = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { consent, setAnalyticsConsent, setActivityConsent } = useTrackingConsent();
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -131,6 +134,32 @@ const Settings = () => {
             {label}
           </button>
         ))}
+      </div>
+
+      <div className="mt-6 border-t border-border pt-4">
+        <h2 className="text-sm font-semibold text-muted-foreground px-4 mb-2">Tracking Permissions</h2>
+        <div className="space-y-1">
+          <div className="flex w-full items-center justify-between rounded-lg px-4 py-3">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm">Analytics Tracking</p>
+                <p className="text-xs text-muted-foreground">Page views, clicks &amp; usage patterns</p>
+              </div>
+            </div>
+            <Switch checked={consent.analytics} onCheckedChange={setAnalyticsConsent} />
+          </div>
+          <div className="flex w-full items-center justify-between rounded-lg px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Activity className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm">Activity Tracking</p>
+                <p className="text-xs text-muted-foreground">Likes, views &amp; personalized recommendations</p>
+              </div>
+            </div>
+            <Switch checked={consent.activity} onCheckedChange={setActivityConsent} />
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 border-t border-border pt-4 space-y-1">
