@@ -88,27 +88,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     setShowingOriginal(false);
   }, []);
 
-  const handleRevert = async () => {
-    if (!user || !originalImageUrl) return;
-    if (!isOwner) {
-      toast({ title: "Only the post owner can revert" });
-      return;
-    }
-    setReverting(true);
-    try {
-      const { error } = await supabase
-        .from("posts")
-        .update({ image_url: originalImageUrl, updated_at: new Date().toISOString() })
-        .eq("id", post.id);
-      if (error) throw error;
-      setCurrentImageUrl(originalImageUrl);
-      toast({ title: "Reverted to original! 🔄" });
-    } catch (err: any) {
-      toast({ title: "Revert failed", description: err.message, variant: "destructive" });
-    } finally {
-      setReverting(false);
-    }
-  };
 
   useEffect(() => {
     setLikesCount(post.likes_count);
