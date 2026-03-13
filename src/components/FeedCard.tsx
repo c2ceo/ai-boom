@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, RotateCcw } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,7 +53,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
-  const [reverting, setReverting] = useState(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -89,27 +88,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     setShowingOriginal(false);
   }, []);
 
-  const handleRevert = async () => {
-    if (!user || !originalImageUrl) return;
-    if (!isOwner) {
-      toast({ title: "Only the post owner can revert" });
-      return;
-    }
-    setReverting(true);
-    try {
-      const { error } = await supabase
-        .from("posts")
-        .update({ image_url: originalImageUrl, updated_at: new Date().toISOString() })
-        .eq("id", post.id);
-      if (error) throw error;
-      setCurrentImageUrl(originalImageUrl);
-      toast({ title: "Reverted to original! 🔄" });
-    } catch (err: any) {
-      toast({ title: "Revert failed", description: err.message, variant: "destructive" });
-    } finally {
-      setReverting(false);
-    }
-  };
 
   useEffect(() => {
     setLikesCount(post.likes_count);
@@ -343,12 +321,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-popover z-50">
-                  {originalImageUrl && originalImageUrl !== currentImageUrl && (
-                    <DropdownMenuItem onClick={handleRevert} disabled={reverting}>
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      {reverting ? "Reverting..." : "Revert to original"}
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick={() => onEdit?.(post.id)}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit
