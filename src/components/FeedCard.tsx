@@ -53,7 +53,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
-  const [reverting, setReverting] = useState(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
