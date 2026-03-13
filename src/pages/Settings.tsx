@@ -162,7 +162,7 @@ const Settings = () => {
         </div>
       </div>
 
-
+      <div className="mt-8 border-t border-border pt-4 space-y-1">
         <button
           onClick={() => setShowSignOutDialog(true)}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
