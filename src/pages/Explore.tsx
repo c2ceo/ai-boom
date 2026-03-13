@@ -90,15 +90,12 @@ const Explore = () => {
         <TabsContent value="posts">
           {/* Search */}
           <div className="px-4 mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search AI content..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-secondary/50 border-border/50"
-              />
-            </div>
+            <SearchWithHistory
+              value={search}
+              onChange={setSearch}
+              placeholder="Search AI content..."
+              storageKey="aiboom_explore_posts_history"
+            />
           </div>
 
           {/* Categories + Family Friendly Toggle */}
