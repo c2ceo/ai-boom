@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldCheck, ShieldAlert, Clock, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ShieldCheck, ShieldAlert, Clock, ThumbsUp, ThumbsDown, Sparkles, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type SortOption = "fresh" | "top" | "probably-ai" | "probably-not-ai";
