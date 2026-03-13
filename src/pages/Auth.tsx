@@ -95,6 +95,9 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-xl">
         <CardHeader className="text-center">
+          <div className="mx-auto mb-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+            🎉 First 100 accounts get 10 FREE credits every week!
+          </div>
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
             <Sparkles className="h-7 w-7 text-primary" />
           </div>
