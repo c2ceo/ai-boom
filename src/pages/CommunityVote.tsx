@@ -149,6 +149,42 @@ const CommunityVote = () => {
     },
   });
 
+  const sortedPosts = useMemo(() => {
+    if (!posts?.length) return [];
+    const sorted = [...posts];
+    switch (sortBy) {
+      case "fresh":
+        return sorted.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case "top": {
+        return sorted.sort((a: any, b: any) => {
+          const aTotal = (voteCounts?.[a.id]?.ai || 0) + (voteCounts?.[a.id]?.notAi || 0);
+          const bTotal = (voteCounts?.[b.id]?.ai || 0) + (voteCounts?.[b.id]?.notAi || 0);
+          return bTotal - aTotal;
+        });
+      }
+      case "probably-ai": {
+        return sorted.sort((a: any, b: any) => {
+          const aC = voteCounts?.[a.id] || { ai: 0, notAi: 0 };
+          const bC = voteCounts?.[b.id] || { ai: 0, notAi: 0 };
+          const aRatio = (aC.ai + aC.notAi) > 0 ? aC.ai / (aC.ai + aC.notAi) : 0.5;
+          const bRatio = (bC.ai + bC.notAi) > 0 ? bC.ai / (bC.ai + bC.notAi) : 0.5;
+          return bRatio - aRatio;
+        });
+      }
+      case "probably-not-ai": {
+        return sorted.sort((a: any, b: any) => {
+          const aC = voteCounts?.[a.id] || { ai: 0, notAi: 0 };
+          const bC = voteCounts?.[b.id] || { ai: 0, notAi: 0 };
+          const aRatio = (aC.ai + aC.notAi) > 0 ? aC.notAi / (aC.ai + aC.notAi) : 0.5;
+          const bRatio = (bC.ai + bC.notAi) > 0 ? bC.notAi / (bC.ai + bC.notAi) : 0.5;
+          return bRatio - aRatio;
+        });
+      }
+      default:
+        return sorted;
+    }
+  }, [posts, sortBy, voteCounts]);
+
   return (
     <div className="min-h-screen pb-20 pt-4 px-4 text-foreground">
       <div className="flex items-center gap-2 mb-4">
@@ -163,7 +199,7 @@ const CommunityVote = () => {
         </svg>
         <h1 className="text-2xl font-bold">Community Vote</h1>
       </div>
-      <p className="text-sm text-muted-foreground mb-6">
+      <p className="text-sm text-muted-foreground mb-4">
         Help verify AI content! Vote whether these posts are AI-generated. After 24 hours, posts with majority "AI" votes get approved.
       </p>
 
@@ -181,7 +217,22 @@ const CommunityVote = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post: any) => {
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fresh">Fresh</SelectItem>
+                <SelectItem value="top">Top (Most Votes)</SelectItem>
+                <SelectItem value="probably-ai">Probably AI</SelectItem>
+                <SelectItem value="probably-not-ai">Probably Not AI</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {sortedPosts.map((post: any) => {
             const counts = voteCounts?.[post.id] || { ai: 0, notAi: 0 };
             const myVote = myVotes?.[post.id];
             const total = counts.ai + counts.notAi;
