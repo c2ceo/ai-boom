@@ -134,31 +134,6 @@ const Settings = () => {
         ))}
       </div>
 
-      <div className="mt-6 border-t border-border pt-4">
-        <h2 className="text-sm font-semibold text-muted-foreground px-4 mb-2">Tracking Permissions</h2>
-        <div className="space-y-1">
-          <div className="flex w-full items-center justify-between rounded-lg px-4 py-3">
-            <div className="flex items-center gap-3">
-              <BarChart3 className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm">Analytics Tracking</p>
-                <p className="text-xs text-muted-foreground">Page views, clicks &amp; usage patterns</p>
-              </div>
-            </div>
-            <Switch checked={consent.analytics} onCheckedChange={setAnalyticsConsent} />
-          </div>
-          <div className="flex w-full items-center justify-between rounded-lg px-4 py-3">
-            <div className="flex items-center gap-3">
-              <Activity className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm">Activity Tracking</p>
-                <p className="text-xs text-muted-foreground">Likes, views &amp; personalized recommendations</p>
-              </div>
-            </div>
-            <Switch checked={consent.activity} onCheckedChange={setActivityConsent} />
-          </div>
-        </div>
-      </div>
 
       <div className="mt-8 border-t border-border pt-4 space-y-1">
         <button
