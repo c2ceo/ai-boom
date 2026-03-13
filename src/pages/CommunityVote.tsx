@@ -9,11 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldCheck, ShieldAlert, Clock, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+type SortOption = "fresh" | "top" | "probably-ai" | "probably-not-ai";
+
 const CommunityVote = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [timeLeftMap, setTimeLeftMap] = useState<Record<string, string>>({});
+  const [sortBy, setSortBy] = useState<SortOption>("fresh");
 
   // Resolve expired votes on page load
   useQuery({
