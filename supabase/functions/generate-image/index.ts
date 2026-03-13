@@ -38,13 +38,16 @@ serve(async (req) => {
     const userId = authData.user?.id;
     if (!userId) throw new Error("User not authenticated");
 
-    // Check if user is among first 10 accounts and has free generations this month
-    const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+    // Check if user is among first 100 accounts and has free generations this week
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+    const currentWeek = `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
     const { data: allProfiles } = await supabase
       .from("profiles")
       .select("user_id")
       .order("created_at", { ascending: true })
-      .limit(10);
+      .limit(100);
 
     const isEligibleForFree = allProfiles?.some((p: any) => p.user_id === userId) ?? false;
     let usedFreeGeneration = false;
@@ -54,10 +57,10 @@ serve(async (req) => {
         .from("free_generations")
         .select("generations_used")
         .eq("user_id", userId)
-        .eq("month", currentMonth)
+        .eq("month", currentWeek)
         .maybeSingle();
 
-      if (!freeGen || freeGen.generations_used < 3) {
+      if (!freeGen || freeGen.generations_used < 10) {
         // Use a free generation
         usedFreeGeneration = true;
         if (freeGen) {
@@ -65,11 +68,11 @@ serve(async (req) => {
             .from("free_generations")
             .update({ generations_used: freeGen.generations_used + 1 })
             .eq("user_id", userId)
-            .eq("month", currentMonth);
+            .eq("month", currentWeek);
         } else {
           await supabase
             .from("free_generations")
-            .insert({ user_id: userId, month: currentMonth, generations_used: 1 });
+            .insert({ user_id: userId, month: currentWeek, generations_used: 1 });
         }
       }
     }
