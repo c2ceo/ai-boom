@@ -117,13 +117,13 @@ serve(async (req) => {
         .eq("user_id", userId);
     }
 
-    // Use fal.ai Luma Photon to evolve the image
+    // Use fal.ai FLUX for image evolution
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
     if (!FAL_API_KEY) throw new Error("FAL_API_KEY not configured");
 
     const evolvePrompt = `Evolve this image into something more extraordinary. Amplify colors, add intricate details, increase visual complexity, make it more surreal and dreamlike. Push it to the next level of artistic quality.${post.caption ? ` Original concept: ${post.caption}` : ""}`;
 
-    const falRes = await fetch("https://fal.run/fal-ai/luma-photon/flash/modify", {
+    const falRes = await fetch("https://fal.run/fal-ai/flux/dev/image-to-image", {
       method: "POST",
       headers: {
         Authorization: `Key ${FAL_API_KEY}`,
@@ -132,14 +132,16 @@ serve(async (req) => {
       body: JSON.stringify({
         image_url: mediaUrl,
         prompt: evolvePrompt,
-        strength: 0.7,
-        aspect_ratio: "16:9",
+        strength: 0.65,
+        image_size: "landscape_16_9",
+        num_inference_steps: 28,
+        guidance_scale: 3.5,
       }),
     });
 
     if (!falRes.ok) {
       const errText = await falRes.text();
-      console.error("Luma evolve error:", falRes.status, errText);
+      console.error("FLUX evolve error:", falRes.status, errText);
       throw new Error(`Image evolution failed (${falRes.status})`);
     }
 
