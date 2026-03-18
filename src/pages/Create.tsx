@@ -404,6 +404,51 @@ const Create = () => {
                       <X className="h-4 w-4" />
                     </button>
                   </div>
+                   {/* Optional AI Edit section for images */}
+                  {!file?.type?.startsWith("video/") && sourceBase64 && (
+                    <div className="space-y-2 border border-border/50 rounded-lg p-3 bg-muted/30">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Wand2 className="h-3 w-3 text-primary" />
+                        <span className="font-medium">Optional: AI Edit before posting</span>
+                        {falCredits !== null && <span className="ml-auto">{falCredits} credits</span>}
+                      </div>
+                      {editedPreview && (
+                        <div className="relative">
+                          <img src={editedPreview} alt="Edited" className="w-full rounded-lg max-h-60 object-cover" />
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/90 text-primary-foreground">Edited</span>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Textarea
+                          placeholder="Describe how to edit..."
+                          value={editPrompt}
+                          onChange={(e) => setEditPrompt(e.target.value)}
+                          rows={1}
+                          className="resize-none text-xs min-h-[36px]"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={handleApplyEdit}
+                          disabled={editingPhoto || !editPrompt.trim() || (falCredits !== null && falCredits <= 0)}
+                          className="shrink-0 gap-1"
+                        >
+                          {editingPhoto ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                          Edit
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {editSuggestions.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setEditPrompt(s)}
+                            className="px-2 py-0.5 rounded-full text-[10px] bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 transition-colors"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground text-center">
                     <ShieldCheck className="inline h-3 w-3 mr-1" />
                     AI filter will verify this content when you publish
