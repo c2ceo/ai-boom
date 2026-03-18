@@ -284,12 +284,17 @@ const Create = () => {
       const isVideo = mode === "video" || file?.type?.startsWith("video/");
 
       if (mode === "upload" && file) {
-        const ext = file.name.split(".").pop();
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        uploadedUrl = publicUrl;
+        if (editedPreview) {
+          // Use the AI-edited image URL directly (already stored in media bucket)
+          uploadedUrl = editedPreview;
+        } else {
+          const ext = file.name.split(".").pop();
+          const path = `${user.id}/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+          if (uploadError) throw uploadError;
+          const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+          uploadedUrl = publicUrl;
+        }
       }
 
       // Run AI filter on uploaded images (skip for videos and in-app generated)
