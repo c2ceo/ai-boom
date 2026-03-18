@@ -420,7 +420,7 @@ const Create = () => {
                     <Button variant="outline" className="gap-2" onClick={() => galleryInputRef.current?.click()}>
                         <ImageIcon className="h-4 w-4" /> Gallery
                       </Button>
-                      <input ref={galleryInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
+                      <input ref={galleryInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className="absolute w-0 h-0 opacity-0 pointer-events-none" />
                     <Button onClick={() => cameraInputRef.current?.click()} className="gap-2">
                       <Camera className="h-4 w-4" /> Camera
                     </Button>
