@@ -430,7 +430,7 @@ const Create = () => {
                       accept="image/*"
                       capture="environment"
                       onChange={handleFileChange}
-                      className="hidden"
+                      className="absolute w-0 h-0 opacity-0 pointer-events-none"
                     />
                   </div>
                 </div>
