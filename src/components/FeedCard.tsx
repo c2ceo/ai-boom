@@ -28,6 +28,7 @@ interface FeedCardProps {
     category: string;
     user_id: string;
     allow_evolve?: boolean;
+    shared_prompt?: string | null;
   };
   profile?: {
     username: string | null;
