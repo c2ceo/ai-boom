@@ -768,6 +768,14 @@ const Create = () => {
           <Switch id="allow-evolve" checked={allowEvolve} onCheckedChange={setAllowEvolve} />
         </div>
 
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-primary" />
+            <Label htmlFor="share-prompt" className="text-sm cursor-pointer">Share prompt publicly</Label>
+          </div>
+          <Switch id="share-prompt" checked={sharePrompt} onCheckedChange={setSharePrompt} />
+        </div>
+
         <Button onClick={handlePost} disabled={loading || checking || generatingVideo} className="w-full" size="lg">
           {checking ? (
             <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking AI content...</>
