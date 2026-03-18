@@ -306,6 +306,16 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
+            {post.shared_prompt && (
+              <button
+                onClick={() => setShowPrompt((p) => !p)}
+                className="flex flex-col items-center gap-0.5"
+                title="View prompt"
+              >
+                <Lightbulb className={`h-5 w-5 ${showPrompt ? "text-primary fill-primary/20" : "text-foreground"}`} />
+                <span className="text-[10px] text-muted-foreground">Prompt</span>
+              </button>
+            )}
             {post.allow_evolve !== false && (
               <button
                 onClick={handleEvolve}
