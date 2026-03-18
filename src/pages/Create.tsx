@@ -338,6 +338,15 @@ const Create = () => {
       }
 
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
+
+      // Determine the prompt to share
+      let promptToShare: string | null = null;
+      if (sharePrompt) {
+        if (mode === "generate") promptToShare = prompt;
+        else if (mode === "video") promptToShare = videoPrompt;
+        else if (mode === "upload" && photoEdited) promptToShare = editPrompt;
+      }
+
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         image_url: isVideo ? null : uploadedUrl,
@@ -351,6 +360,7 @@ const Create = () => {
         status: needsReview ? "pending_review" : "approved",
         voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
         allow_evolve: allowEvolve,
+        shared_prompt: promptToShare,
       } as any);
 
       if (error) throw error;
