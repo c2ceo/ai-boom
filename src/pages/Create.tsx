@@ -297,11 +297,11 @@ const Create = () => {
         }
       }
 
-      // Run AI filter on uploaded images (skip for videos and in-app generated)
-      let verifiedAi = mode === "generate" || mode === "video";
+      // Run AI filter on uploaded images (skip for videos, in-app generated, and AI-edited uploads)
+      let verifiedAi = mode === "generate" || mode === "video" || photoEdited;
       let filterResult: { is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null = null;
 
-      if (mode === "upload" && !isVideo && uploadedUrl) {
+      if (mode === "upload" && !isVideo && !photoEdited && uploadedUrl) {
         setChecking(true);
         try {
           const { data: filterData, error: filterError } = await supabase.functions.invoke("ai-filter", {
