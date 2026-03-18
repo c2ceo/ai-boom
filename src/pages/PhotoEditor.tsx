@@ -135,8 +135,8 @@ const PhotoEditor = () => {
                 <Camera className="h-4 w-4" /> Camera
               </Button>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="absolute w-0 h-0 opacity-0 pointer-events-none" />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="absolute w-0 h-0 opacity-0 pointer-events-none" />
           </CardContent>
         </Card>
       ) : (
