@@ -365,6 +365,7 @@ export type Database = {
           is_family_friendly: boolean
           is_verified_ai: boolean
           likes_count: number
+          shared_prompt: string | null
           status: string
           tags: string[] | null
           updated_at: string
@@ -385,6 +386,7 @@ export type Database = {
           is_family_friendly?: boolean
           is_verified_ai?: boolean
           likes_count?: number
+          shared_prompt?: string | null
           status?: string
           tags?: string[] | null
           updated_at?: string
@@ -405,6 +407,7 @@ export type Database = {
           is_family_friendly?: boolean
           is_verified_ai?: boolean
           likes_count?: number
+          shared_prompt?: string | null
           status?: string
           tags?: string[] | null
           updated_at?: string
@@ -599,6 +602,7 @@ export type Database = {
           is_family_friendly: boolean
           is_verified_ai: boolean
           likes_count: number
+          shared_prompt: string | null
           status: string
           tags: string[] | null
           updated_at: string

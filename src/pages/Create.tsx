@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
@@ -35,6 +35,7 @@ const Create = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [allowEvolve, setAllowEvolve] = useState(true);
+  const [sharePrompt, setSharePrompt] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
@@ -337,6 +338,15 @@ const Create = () => {
       }
 
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
+
+      // Determine the prompt to share
+      let promptToShare: string | null = null;
+      if (sharePrompt) {
+        if (mode === "generate") promptToShare = prompt;
+        else if (mode === "video") promptToShare = videoPrompt;
+        else if (mode === "upload" && photoEdited) promptToShare = editPrompt;
+      }
+
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         image_url: isVideo ? null : uploadedUrl,
@@ -350,6 +360,7 @@ const Create = () => {
         status: needsReview ? "pending_review" : "approved",
         voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
         allow_evolve: allowEvolve,
+        shared_prompt: promptToShare,
       } as any);
 
       if (error) throw error;
@@ -755,6 +766,14 @@ const Create = () => {
             <Label htmlFor="allow-evolve" className="text-sm cursor-pointer">Allow others to evolve</Label>
           </div>
           <Switch id="allow-evolve" checked={allowEvolve} onCheckedChange={setAllowEvolve} />
+        </div>
+
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 text-primary" />
+            <Label htmlFor="share-prompt" className="text-sm cursor-pointer">Share prompt publicly</Label>
+          </div>
+          <Switch id="share-prompt" checked={sharePrompt} onCheckedChange={setSharePrompt} />
         </div>
 
         <Button onClick={handlePost} disabled={loading || checking || generatingVideo} className="w-full" size="lg">

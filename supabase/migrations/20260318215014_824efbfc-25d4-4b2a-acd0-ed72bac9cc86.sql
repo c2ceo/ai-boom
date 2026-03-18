@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN shared_prompt TEXT DEFAULT NULL;

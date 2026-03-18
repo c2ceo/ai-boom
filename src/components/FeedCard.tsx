@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,7 @@ interface FeedCardProps {
     category: string;
     user_id: string;
     allow_evolve?: boolean;
+    shared_prompt?: string | null;
   };
   profile?: {
     username: string | null;
@@ -53,6 +54,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -275,6 +277,12 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             {post.caption && (
               <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
             )}
+            {showPrompt && post.shared_prompt && (
+              <div className="ml-10 mt-1 p-2 rounded-md bg-primary/5 border border-primary/20">
+                <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-0.5">Prompt</p>
+                <p className="text-xs text-foreground">{post.shared_prompt}</p>
+              </div>
+            )}
           </div>
 
           {/* Right: action buttons */}
@@ -298,6 +306,16 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <button onClick={handleShare}>
               <Share2 className="h-5 w-5 text-foreground" />
             </button>
+            {post.shared_prompt && (
+              <button
+                onClick={() => setShowPrompt((p) => !p)}
+                className="flex flex-col items-center gap-0.5"
+                title="View prompt"
+              >
+                <Lightbulb className={`h-5 w-5 ${showPrompt ? "text-primary fill-primary/20" : "text-foreground"}`} />
+                <span className="text-[10px] text-muted-foreground">Prompt</span>
+              </button>
+            )}
             {post.allow_evolve !== false && (
               <button
                 onClick={handleEvolve}
