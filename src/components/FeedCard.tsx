@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
