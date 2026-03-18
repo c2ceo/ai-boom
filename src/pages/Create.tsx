@@ -339,6 +339,24 @@ const Create = () => {
 
       const needsReview = !verifiedAi && mode === "upload" && !isVideo;
 
+      // Enforce max 3 pending posts per user
+      if (needsReview) {
+        const { count } = await supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("status", "pending_review");
+        if (count !== null && count >= 3) {
+          toast({
+            title: "Pending post limit reached",
+            description: "You can only have 3 posts pending community review at a time. Wait for existing ones to be resolved.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Determine the prompt to share
       let promptToShare: string | null = null;
       if (sharePrompt) {
