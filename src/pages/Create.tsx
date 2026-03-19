@@ -372,7 +372,7 @@ const Create = () => {
         caption,
         tags,
         category,
-        ai_tool: mode === "generate" ? "in-app" : mode === "video" ? "fal.ai" : aiTool,
+        ai_tool: mode === "generate" ? "fal.ai" : mode === "video" ? "fal.ai" : aiTool,
         is_verified_ai: verifiedAi,
         is_family_friendly: isFamilyFriendly,
         status: needsReview ? "pending_review" : "approved",
