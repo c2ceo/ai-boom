@@ -195,7 +195,7 @@ const Create = () => {
       if (data?.error) throw new Error(data.error);
       if (data?.imageUrl) {
         setGeneratedImage(data.imageUrl);
-        setAiTool("in-app");
+        setAiTool("fal.ai");
         fetchCredits(); // refresh credits count
       }
     } catch (error: any) {
