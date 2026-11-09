@@ -215,8 +215,11 @@ const Home = () => {
           return true;
         })
         .map((post) => (
-          <FeedCard
+          <div
             key={post.id}
+            className={`snap-start ${hideControls ? "" : filterSide === "right" ? "pr-14" : "pl-14"}`}
+          >
+          <FeedCard
             post={post}
             profile={post.profile}
             isLiked={likedPosts.has(post.id)}
@@ -226,6 +229,7 @@ const Home = () => {
             onArchive={() => handleArchive()}
             badgeSide={filterSide === "right" ? "left" : "right"}
           />
+          </div>
         ))}
       {commentPostId && (
         <CommentSheet

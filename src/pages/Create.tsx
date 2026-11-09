@@ -34,7 +34,7 @@ const Create = () => {
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [allowEvolve, setAllowEvolve] = useState(true);
+  const [allowEvolve, setAllowEvolve] = useState(false);
   const [sharePrompt, setSharePrompt] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
