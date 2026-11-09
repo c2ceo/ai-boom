@@ -36,6 +36,13 @@
       "when": 1794257380206,
       "tag": "0004_harden_posts_counts_and_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794260884125,
+      "tag": "0005_image_model_promotion",
+      "breakpoints": true
     }
   ]
 }

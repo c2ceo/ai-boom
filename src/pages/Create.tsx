@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { IMAGE_MODELS, SCHNELL_FREE_LIMIT, imageCreditCost, type ImageModel } from "../../supabase/functions/_shared/image-models";
 
 const aiTools: string[] = []; // kept for potential future use
 const categories = [
@@ -39,7 +40,14 @@ const Create = () => {
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
-  const imageProvider = "fal";
+  const [imageModel, setImageModel] = useState<ImageModel>("schnell");
+  const [freeReserved, setFreeReserved] = useState<number | null>(null);
+  const [enhancing, setEnhancing] = useState(false);
+  const imageCost = imageCreditCost(imageModel, freeReserved ?? SCHNELL_FREE_LIMIT);
+  const refreshPromotion = useCallback(async () => {
+    const { data, error } = await supabase.from("image_promotion").select("free_reserved").eq("id", true).maybeSingle();
+    if (!error) setFreeReserved(data?.free_reserved ?? 0);
+  }, []);
 
   // Video generation state
   const [videoPrompt, setVideoPrompt] = useState("");
@@ -61,6 +69,7 @@ const Create = () => {
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
+  const insufficientImageCredits = imageCost > 0 && (falCredits === null || falCredits < imageCost);
   const [buyingCredits, setBuyingCredits] = useState(false);
 
   const { user } = useAuth();
@@ -81,7 +90,8 @@ const Create = () => {
 
   useEffect(() => {
     fetchCredits();
-  }, [fetchCredits]);
+    if (user) refreshPromotion();
+  }, [fetchCredits, refreshPromotion, user]);
 
   // Handle returning from Stripe checkout
   useEffect(() => {
@@ -185,9 +195,12 @@ const Create = () => {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-image", {
-        body: { prompt, provider: imageProvider },
+        body: { prompt, model: imageModel, request_id: crypto.randomUUID(), max_credits: imageCost },
       });
-      if (error) throw error;
+      if (error) {
+        const details = await error.context?.json?.().catch(() => null);
+        throw new Error(details?.error || error.message);
+      }
       if (data?.needs_credits) {
         toast({ title: "No credits remaining", description: "Purchase fal.ai credits to generate with FLUX.", variant: "destructive" });
         return;
@@ -202,7 +215,23 @@ const Create = () => {
       toast({ title: "Generation failed", description: error.message, variant: "destructive" });
     } finally {
       setGenerating(false);
+      fetchCredits();
+      refreshPromotion();
     }
+  };
+
+  const handleEnhancePrompt = async () => {
+    if (!prompt.trim()) return;
+    setEnhancing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-image", {
+        body: { action: "enhance", prompt, model: imageModel, request_id: crypto.randomUUID(), max_credits: 0 },
+      });
+      if (error || data?.error) throw new Error(data?.error || "Prompt enhancement unavailable");
+      if (data?.prompt) setPrompt(data.prompt);
+    } catch (error) {
+      toast({ title: "Prompt unchanged", description: error instanceof Error ? error.message : "Please try again", variant: "destructive" });
+    } finally { setEnhancing(false); }
   };
 
   const handleGenerateVideo = async () => {
@@ -530,6 +559,23 @@ const Create = () => {
         <TabsContent value="generate">
           <Card className="bg-card/50 mb-4">
             <CardContent className="p-4 space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="image-model">Image model</Label>
+                <Select value={imageModel} onValueChange={(value) => setImageModel(value as ImageModel)} disabled={generating || enhancing}>
+                  <SelectTrigger id="image-model"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="schnell">FLUX Schnell · {freeReserved === null ? "Checking price…" : freeReserved < SCHNELL_FREE_LIMIT ? "Free" : "1 credit"}</SelectItem>
+                    <SelectItem value="dev">FLUX Dev · 5 credits ($0.10)</SelectItem>
+                    <SelectItem value="pro">FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {imageModel === "schnell" && freeReserved !== null && freeReserved < SCHNELL_FREE_LIMIT && (
+                  <p className="text-xs text-muted-foreground">{(SCHNELL_FREE_LIMIT - freeReserved).toLocaleString()} free Schnell images remaining across AI-BOOM; then 1 credit ($0.02) each.</p>
+                )}
+                <Button type="button" variant="outline" size="sm" onClick={handleEnhancePrompt} disabled={!prompt.trim() || enhancing || generating} className="gap-2">
+                  {enhancing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Enhance Prompt
+                </Button>
+              </div>
               {generatedImage ? (
                 <>
                   <div className="relative">
@@ -552,9 +598,9 @@ const Create = () => {
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={2}
                   />
-                  <Button onClick={handleGenerate} disabled={generating || !prompt.trim()} className="w-full gap-2" variant="secondary">
+                  <Button onClick={handleGenerate} disabled={generating || enhancing || !prompt.trim() || freeReserved === null || insufficientImageCredits} className="w-full gap-2" variant="secondary">
                     <Sparkles className="h-4 w-4" />
-                    {generating ? "Regenerating..." : "Edit & Regenerate"}
+                    {generating ? "Regenerating..." : `Regenerate · ${imageCost === 0 ? "Free" : `${imageCost} credits`}`}
                   </Button>
                 </>
               ) : (
@@ -586,13 +632,13 @@ const Create = () => {
                   />
                   <Button
                     onClick={handleGenerate}
-                    disabled={generating || !prompt.trim() || (falCredits !== null && falCredits <= 0)}
+                    disabled={generating || enhancing || !prompt.trim() || freeReserved === null || insufficientImageCredits}
                     className="w-full gap-2"
                   >
                     <Sparkles className="h-4 w-4" />
-                    {generating ? "Generating..." : "Generate with FLUX"}
+                    {generating ? "Generating..." : `Generate · ${imageCost === 0 ? "Free" : `${imageCost} credits`}`}
                   </Button>
-                  {falCredits !== null && falCredits <= 0 && (
+                  {insufficientImageCredits && (
                     <p className="text-xs text-destructive text-center">Purchase credits to generate with FLUX</p>
                   )}
                 </>
