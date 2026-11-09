@@ -269,7 +269,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       <div className="max-w-lg mx-auto w-full px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Left: user info + caption */}
-          <div className="flex-1 mr-4">
+          <div className="flex-1 min-w-0 mr-2">
             <div className="flex items-center gap-2 mb-1">
               <Avatar className="h-8 w-8 border-2 border-primary/50">
                 <AvatarImage src={profile?.avatar_url || undefined} />
@@ -307,7 +307,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
           </div>
 
           {/* Right: action buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
             <div className="flex flex-col items-center gap-0.5">
               <Eye className="h-5 w-5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">{viewsCount}</span>
