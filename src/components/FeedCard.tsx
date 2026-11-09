@@ -289,7 +289,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                 <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
               )}
               {post.shared_prompt && (
-                <div className={`ml-10 ${post.caption ? "mt-1" : ""} p-2 rounded-md bg-primary/5 border border-primary/20">
+                <div className={`ml-10 ${post.caption ? "mt-1" : ""} p-2 rounded-md bg-primary/5 border border-primary/20`}>
                   <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-0.5">Prompt</p>
                   <p className="text-xs text-foreground">{post.shared_prompt}</p>
                 </div>
