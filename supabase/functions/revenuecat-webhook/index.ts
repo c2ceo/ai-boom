@@ -16,7 +16,7 @@ serve(async (req) => {
   const authHeader = req.headers.get("Authorization");
   const expectedSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
 
-  if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+  if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -126,6 +126,7 @@ serve(async (req) => {
     if (uploadError) throw uploadError;
 
     const { data: finalUrl } = supabase.storage.from("media").getPublicUrl(fileName);
+    await supabase.from("verified_media").insert({ media_url: finalUrl.publicUrl, user_id: userId });
 
     return new Response(
       JSON.stringify({ editedImageUrl: finalUrl.publicUrl }),

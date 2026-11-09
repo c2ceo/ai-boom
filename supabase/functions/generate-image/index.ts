@@ -136,6 +136,7 @@ serve(async (req) => {
     if (uploadError) throw uploadError;
 
     const { data: urlData } = supabase.storage.from("media").getPublicUrl(fileName);
+    await supabase.from("verified_media").insert({ media_url: urlData.publicUrl, user_id: userId });
 
     return new Response(JSON.stringify({ imageUrl: urlData.publicUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
