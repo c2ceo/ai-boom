@@ -217,7 +217,7 @@ const Home = () => {
         .map((post) => (
           <div
             key={post.id}
-            className={`snap-start ${hideControls ? "" : filterSide === "right" ? "pr-14" : "pl-14"}`}
+            className={`snap-start ${hideControls ? "" : filterSide === "right" ? "pr-16" : "pl-16"}`}
           >
           <FeedCard
             post={post}
