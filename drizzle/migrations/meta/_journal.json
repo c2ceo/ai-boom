@@ -15,6 +15,13 @@
       "when": 1794256687884,
       "tag": "0001_restrict_selected_service_management_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794257085057,
+      "tag": "0002_scope_public_read_policies",
+      "breakpoints": true
     }
   ]
 }

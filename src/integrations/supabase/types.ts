@@ -598,6 +598,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_post: { Args: { _post: string }; Returns: boolean }
+      can_view_user: { Args: { _target: string }; Returns: boolean }
       fulfill_stripe_credits: {
         Args: { p_credits: number; p_session_id: string; p_user_id: string }
         Returns: boolean
