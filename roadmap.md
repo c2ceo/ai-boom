@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Check SSL for AI-BOOM and all connected domains/pages; resolve any setup issues
 - [ ] Replace Buy Credits with a Stripe page selling 50 credits for $1 and securely fulfill the generation balance
 - [x] Use in-app purchase paywall on Buy Credits
 - [x] Fix password reset email link
