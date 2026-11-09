@@ -593,6 +593,42 @@ export type Database = {
         }
         Relationships: []
       }
+      verified_media: {
+        Row: {
+          created_at: string
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          media_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      video_jobs: {
+        Row: {
+          created_at: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -671,6 +707,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_post_view: { Args: { p_post_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
