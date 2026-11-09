@@ -36,8 +36,17 @@ serve(async (req) => {
       .single();
 
     if (postError || !post) throw new Error("Post not found");
-    if (post.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Only the post owner can evolve this post" }), {
+    let canEvolve = post.user_id === userId;
+    if (!canEvolve && post.allow_evolve !== false) {
+      // Check the caller can actually see this post (respects private accounts and review status)
+      const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: visible } = await userClient.rpc("can_view_post", { _post: post_id });
+      canEvolve = visible === true;
+    }
+    if (!canEvolve) {
+      return new Response(JSON.stringify({ error: "This post can't be evolved" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
