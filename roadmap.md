@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Use old paywall page for new credit packages (waiting on user: which old page)
+- [x] Use in-app purchase paywall on Buy Credits
 - [x] Fix password reset email link
 - [x] Center photo + caption when scrolling; collapsible caption/prompt when >2 lines
 - [x] AI tool badge on opposite side of media type selector
