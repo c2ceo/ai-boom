@@ -1,11 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2.95.3";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders } from "npm:@supabase/supabase-js@2.95.3/cors";
+import { validateCreditPayment } from "../_shared/credit-pack.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,14 +16,15 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Please sign in to verify payment");
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
     const { session_id } = await req.json();
-    if (!session_id) throw new Error("session_id is required");
+    if (typeof session_id !== "string" || !/^cs_[a-zA-Z0-9_]+$/.test(session_id)) throw new Error("session_id is required");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -33,62 +32,25 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    if (session.payment_status !== "paid") {
-      return new Response(JSON.stringify({ error: "Payment not completed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
-
-    // Verify the session belongs to this user
-    if (session.metadata?.user_id !== user.id) {
-      return new Response(JSON.stringify({ error: "Session does not belong to this user" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 403,
-      });
-    }
-
-    const creditAmount = parseInt(session.metadata?.credit_amount || "20");
-
-    // Use service role to upsert credits
+    const creditAmount = validateCreditPayment(session, user.id);
     const serviceClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+    const { data: added, error: fulfillmentError } = await serviceClient.rpc("fulfill_stripe_credits", {
+      p_session_id: session.id,
+      p_user_id: user.id,
+      p_credits: creditAmount,
+    });
+    if (fulfillmentError) throw new Error("Could not apply credits. Please retry payment verification.");
 
-    // Check if user already has a credits row
-    const { data: existing } = await serviceClient
-      .from("fal_credits")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (existing) {
-      await serviceClient
-        .from("fal_credits")
-        .update({
-          credits_remaining: existing.credits_remaining + creditAmount,
-          total_purchased: existing.total_purchased + creditAmount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-    } else {
-      await serviceClient
-        .from("fal_credits")
-        .insert({
-          user_id: user.id,
-          credits_remaining: creditAmount,
-          total_purchased: creditAmount,
-        });
-    }
-
-    return new Response(JSON.stringify({ success: true, credits_added: creditAmount }), {
+    return new Response(JSON.stringify({ success: true, credits_added: added ? creditAmount : 0, already_applied: !added }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     console.error("verify-fal-payment error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Verification failed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
