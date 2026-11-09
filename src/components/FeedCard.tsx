@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,9 +41,10 @@ interface FeedCardProps {
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onArchive?: (postId: string) => void;
+  badgeSide?: "left" | "right";
 }
 
-const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive }: FeedCardProps) => {
+const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onDelete, onEdit, onArchive, badgeSide = "right" }: FeedCardProps) => {
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [liked, setLiked] = useState(isLiked);
@@ -55,6 +56,18 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [textExpanded, setTextExpanded] = useState(false);
+  const [textOverflows, setTextOverflows] = useState(false);
+  const textRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    const check = () => { if (!textExpanded) setTextOverflows(el.scrollHeight > el.clientHeight + 1); };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [post.caption, post.shared_prompt, showPrompt, textExpanded]);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -184,7 +197,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   };
 
   return (
-    <div className="snap-start w-full flex flex-col items-center bg-background py-4">
+    <div className="snap-center w-full min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-background py-4">
       {/* Media */}
       <div
         className="relative w-full max-w-lg mx-auto cursor-pointer select-none"
@@ -245,7 +258,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
         </AnimatePresence>
 
         {/* AI Tool Badge */}
-        <div className="absolute top-4 right-4 flex items-center gap-1">
+        <div className={`absolute top-4 ${badgeSide === "left" ? "left-4" : "right-4"} flex items-center gap-1`}>
           <Badge variant="secondary" className="bg-secondary/80 backdrop-blur-sm text-xs">
             {post.ai_tool}
           </Badge>
@@ -274,14 +287,25 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
                 @{profile?.username || "unknown"}
               </button>
             </div>
+            <div ref={textRef} className={textExpanded ? "" : "line-clamp-2"}>
             {post.caption && (
-              <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
-            )}
-            {showPrompt && post.shared_prompt && (
-              <div className="ml-10 mt-1 p-2 rounded-md bg-primary/5 border border-primary/20">
-                <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-0.5">Prompt</p>
-                <p className="text-xs text-foreground">{post.shared_prompt}</p>
-              </div>
+                <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
+              )}
+              {showPrompt && post.shared_prompt && (
+                <div className="ml-10 mt-1 p-2 rounded-md bg-primary/5 border border-primary/20">
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-0.5">Prompt</p>
+                  <p className="text-xs text-foreground">{post.shared_prompt}</p>
+                </div>
+              )}
+            </div>
+            {(textOverflows || textExpanded) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setTextExpanded((v) => !v); }}
+                className="ml-10 mt-0.5 flex items-center gap-0.5 text-xs font-semibold text-primary"
+              >
+                {textExpanded ? "Show less" : "Show more"}
+                <ChevronDown className={`h-3 w-3 transition-transform ${textExpanded ? "rotate-180" : ""}`} />
+              </button>
             )}
           </div>
 

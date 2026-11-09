@@ -23,7 +23,7 @@ const categories = [
 ];
 
 const Create = () => {
-  const [mode, setMode] = useState<"upload" | "generate" | "video">("upload");
+  const [mode, setMode] = useState<"upload" | "generate" | "video">("generate");
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("ai-art");
   const [aiTool, setAiTool] = useState("");
@@ -405,14 +405,14 @@ const Create = () => {
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate" | "video")}>
         <TabsList className="w-full mb-4">
-          <TabsTrigger value="upload" className="flex-1 gap-2">
-            <Upload className="h-4 w-4" /> Upload
-          </TabsTrigger>
           <TabsTrigger value="generate" className="flex-1 gap-2">
             <Sparkles className="h-4 w-4" /> AI Image
           </TabsTrigger>
           <TabsTrigger value="video" className="flex-1 gap-2">
             <Video className="h-4 w-4" /> AI Video
+          </TabsTrigger>
+          <TabsTrigger value="upload" className="flex-1 gap-2">
+            <Upload className="h-4 w-4" /> Upload
           </TabsTrigger>
         </TabsList>
 

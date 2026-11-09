@@ -13,10 +13,23 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
+    const errDesc = params.get("error_description");
+    if (errDesc) setLinkError(errDesc.replace(/\+/g, " "));
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) setLinkError(error.message); else setReady(true);
+      });
+    }
+    const timeout = setTimeout(() => {
+      setLinkError((e) => e ?? "This reset link is invalid or has expired. Please request a new one.");
+    }, 8000);
     // Listen for the PASSWORD_RECOVERY event which fires when the user clicks the reset link
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
@@ -27,7 +40,7 @@ const ResetPassword = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +65,22 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
+
+  if (!ready && linkError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl">Reset link not working</CardTitle>
+            <CardDescription>{linkError}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full" onClick={() => navigate("/auth")}>Request a new link</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!ready) {
     return (
