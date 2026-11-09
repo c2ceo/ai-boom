@@ -33,22 +33,29 @@ serve(async (req) => {
       }
     }
 
-    // For submit action, authenticate and deduct credits (40 credits = $2)
-    if (action === "submit") {
-      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-      const authHeader = req.headers.get("Authorization");
-      if (!authHeader?.startsWith("Bearer ")) throw new Error("Authentication required");
-      const token = authHeader.replace("Bearer ", "");
-
-      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: { headers: { Authorization: authHeader } },
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims?.sub) throw new Error("User not authenticated");
-      const userId = claimsData.claims.sub as string;
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "User not authenticated" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    if (action === "submit") {
 
       // Check if user is among first 100 accounts and has free generations this week
       const now = new Date();
@@ -136,6 +143,7 @@ serve(async (req) => {
       }
 
       const data = await submitRes.json();
+      await supabase.from("video_jobs").insert({ request_id: data.request_id, user_id: userId });
       return new Response(JSON.stringify({ request_id: data.request_id, status: "IN_QUEUE" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -143,6 +151,13 @@ serve(async (req) => {
     } else if (action === "poll") {
       // Check status of existing job
       if (!request_id) throw new Error("request_id is required");
+      const { data: job } = await supabase.from("video_jobs").select("user_id")
+        .eq("request_id", String(request_id)).maybeSingle();
+      if (!job || job.user_id !== userId) {
+        return new Response(JSON.stringify({ error: "Video job not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const statusRes = await fetch(
         `https://queue.fal.run/${videoModel}/requests/${request_id}/status`,
@@ -171,12 +186,6 @@ serve(async (req) => {
         const videoRes = await fetch(videoUrl);
         const videoBytes = new Uint8Array(await videoRes.arrayBuffer());
 
-        const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-        );
-
         const fileName = `generated-videos/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
         const { error: uploadError } = await supabase.storage
           .from("media")
@@ -184,6 +193,7 @@ serve(async (req) => {
 
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("media").getPublicUrl(fileName);
+        await supabase.from("verified_media").upsert({ media_url: urlData.publicUrl, user_id: userId });
 
         return new Response(JSON.stringify({ status: "COMPLETED", videoUrl: urlData.publicUrl }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -29,6 +29,13 @@
       "when": 1794257243130,
       "tag": "0003_scope_media_storage_to_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794257380206,
+      "tag": "0004_harden_posts_counts_and_verification",
+      "breakpoints": true
     }
   ]
 }

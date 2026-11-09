@@ -31,11 +31,17 @@ serve(async (req) => {
     // Fetch the post
     const { data: post, error: postError } = await supabase
       .from("posts")
-      .select("image_url, video_url, caption")
+      .select("image_url, video_url, caption, user_id, allow_evolve")
       .eq("id", post_id)
       .single();
 
     if (postError || !post) throw new Error("Post not found");
+    if (post.user_id !== userId) {
+      return new Response(JSON.stringify({ error: "Only the post owner can evolve this post" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Save original media before evolving (only if not already saved)
     const { data: existingOriginal } = await supabase

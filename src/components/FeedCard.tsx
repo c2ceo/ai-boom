@@ -112,7 +112,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
 
   useEffect(() => {
     const trackView = async () => {
-      await supabase.rpc("increment_count", { table_name: "posts", column_name: "views_count", row_id: post.id, amount: 1 });
+      await supabase.rpc("record_post_view", { p_post_id: post.id });
       setViewsCount((c) => c + 1);
     };
     trackView();
@@ -142,7 +142,6 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
       await supabase.from("likes").insert({ user_id: user.id, post_id: post.id });
-      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: 1 });
       onLikeToggle?.();
     } else {
       setShowHeart(true);
@@ -156,12 +155,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       setLiked(false);
       setLikesCount((c) => c - 1);
       await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", post.id);
-      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: -1 });
     } else {
       setLiked(true);
       setLikesCount((c) => c + 1);
       await supabase.from("likes").insert({ user_id: user.id, post_id: post.id });
-      await supabase.rpc("increment_count", { table_name: "posts", column_name: "likes_count", row_id: post.id, amount: 1 });
     }
     onLikeToggle?.();
   };

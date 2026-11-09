@@ -77,11 +77,6 @@ const CommentSheet = ({ postId, open, onOpenChange }: CommentSheetProps) => {
     if (!error) {
       setNewComment("");
       fetchComments();
-      await supabase.rpc("increment_count", {
-        table_name: "posts",
-        column_name: "comments_count",
-        row_id: postId,
-      });
     }
     setSubmitting(false);
   };
