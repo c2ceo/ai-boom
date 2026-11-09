@@ -44,7 +44,6 @@ const Create = () => {
   const [freeReserved, setFreeReserved] = useState<number | null>(null);
   const [enhancing, setEnhancing] = useState(false);
   const imageCost = imageCreditCost(imageModel, freeReserved ?? SCHNELL_FREE_LIMIT);
-  const insufficientImageCredits = imageCost > 0 && (falCredits === null || falCredits < imageCost);
   const refreshPromotion = useCallback(async () => {
     const { data, error } = await supabase.from("image_promotion").select("free_reserved").eq("id", true).maybeSingle();
     if (!error) setFreeReserved(data?.free_reserved ?? 0);
@@ -70,6 +69,7 @@ const Create = () => {
 
   // Credits state
   const [falCredits, setFalCredits] = useState<number | null>(null);
+  const insufficientImageCredits = imageCost > 0 && (falCredits === null || falCredits < imageCost);
   const [buyingCredits, setBuyingCredits] = useState(false);
 
   const { user } = useAuth();
