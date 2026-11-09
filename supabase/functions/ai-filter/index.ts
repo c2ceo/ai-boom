@@ -10,6 +10,18 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const authHeader = req.headers.get("Authorization");
+    const authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: claimsData } = authHeader?.startsWith("Bearer ")
+      ? await authClient.auth.getClaims(authHeader.replace("Bearer ", ""))
+      : { data: null };
+    const userId = claimsData?.claims?.sub as string | undefined;
+    if (!userId || claimsData?.claims?.role !== "authenticated") {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const { imageUrl } = await req.json();
     if (!imageUrl) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
@@ -115,10 +127,20 @@ Respond ONLY with JSON.`,
 
     const data = await response.json();
 
+    const recordVerified = async (result: any) => {
+      const ownPrefix = `/storage/v1/object/public/media/${userId}/`;
+      if (result?.is_ai_generated && Number(result.confidence) >= 0.7 && result.is_family_friendly !== false
+          && typeof imageUrl === "string" && imageUrl.startsWith(Deno.env.get("SUPABASE_URL")! + ownPrefix)) {
+        const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+        await admin.from("verified_media").upsert({ media_url: imageUrl, user_id: userId });
+      }
+    };
+
     // Extract tool call result
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       const result = JSON.parse(toolCall.function.arguments);
+      await recordVerified(result);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -129,6 +151,7 @@ Respond ONLY with JSON.`,
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
+      await recordVerified(result);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
