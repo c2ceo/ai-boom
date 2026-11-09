@@ -173,6 +173,54 @@ export type Database = {
         }
         Relationships: []
       }
+      image_promotion: {
+        Row: {
+          free_reserved: number
+          id: boolean
+        }
+        Insert: {
+          free_reserved?: number
+          id?: boolean
+        }
+        Update: {
+          free_reserved?: number
+          id?: boolean
+        }
+        Relationships: []
+      }
+      image_requests: {
+        Row: {
+          created_at: string
+          credits: number
+          id: string
+          image_url: string | null
+          model: string
+          promotional: boolean
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits?: number
+          id: string
+          image_url?: string | null
+          model: string
+          promotional?: boolean
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          id?: string
+          image_url?: string | null
+          model?: string
+          promotional?: boolean
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -636,6 +684,10 @@ export type Database = {
     Functions: {
       can_view_post: { Args: { _post: string }; Returns: boolean }
       can_view_user: { Args: { _target: string }; Returns: boolean }
+      finish_image_request: {
+        Args: { p_id: string; p_success: boolean; p_url?: string }
+        Returns: undefined
+      }
       fulfill_stripe_credits: {
         Args: { p_credits: number; p_session_id: string; p_user_id: string }
         Returns: boolean
@@ -708,6 +760,15 @@ export type Database = {
         Returns: undefined
       }
       record_post_view: { Args: { p_post_id: string }; Returns: undefined }
+      reserve_image_request: {
+        Args: {
+          p_id: string
+          p_max_credits: number
+          p_model: string
+          p_user: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
