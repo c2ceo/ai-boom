@@ -536,6 +536,27 @@ export type Database = {
           },
         ]
       }
+      stripe_credit_purchases: {
+        Row: {
+          created_at: string
+          credits: number
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -577,6 +598,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fulfill_stripe_credits: {
+        Args: { p_credits: number; p_session_id: string; p_user_id: string }
+        Returns: boolean
+      }
       get_daily_remix_count: { Args: { p_user_id: string }; Returns: number }
       get_or_create_conversation: {
         Args: { other_user_id: string }
