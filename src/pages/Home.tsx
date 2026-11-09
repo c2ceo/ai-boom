@@ -224,6 +224,7 @@ const Home = () => {
             onDelete={handleDelete}
             onEdit={handleEdit}
             onArchive={() => handleArchive()}
+            badgeSide={filterSide === "right" ? "left" : "right"}
           />
         ))}
       {commentPostId && (
