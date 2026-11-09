@@ -8,6 +8,13 @@
       "when": 1794256342772,
       "tag": "0000_atomic_stripe_credit_fulfillment",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794256687884,
+      "tag": "0001_restrict_selected_service_management_policies",
+      "breakpoints": true
     }
   ]
 }
