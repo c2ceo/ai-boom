@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import DevToggle from "@/components/DevToggle";
-import AgeGate from "@/components/AgeGate";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import Create from "./pages/Create";
@@ -107,9 +106,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
-            <AgeGate>
-              <AppRoutes />
-            </AgeGate>
+            <AppRoutes />
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
