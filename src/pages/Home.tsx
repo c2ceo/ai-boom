@@ -136,28 +136,29 @@ const Home = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory hide-scrollbar scroll-smooth" style={{ scrollSnapStop: 'always' }}>
-      {/* Media filter tabs - vertical, centered on side */}
+      {/* Compact media filter above the post actions */}
       {!hideControls && (
-        <div className={`fixed top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border ${filterSide === "right" ? "right-3" : "left-3"}`}>
+        <div role="group" aria-label="Media type" className={`fixed top-28 z-20 flex items-center gap-1 bg-background/70 backdrop-blur-md rounded-full px-1 py-1 border border-border ${filterSide === "right" ? "right-3" : "left-3"}`}>
           {(["all", "photos", "videos"] as MediaFilter[]).map((filter) => (
-            <button
+            <Button
+              variant="ghost"
               key={filter}
+              aria-pressed={mediaFilter === filter}
               onClick={() => setMediaFilter(filter)}
-              className={`px-3 py-2 rounded-full text-xs font-semibold transition-all writing-mode-vertical ${
+              className={`h-8 px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 mediaFilter === filter
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
-              style={{ writingMode: "vertical-lr", textOrientation: "mixed" }}
             >
               {filter === "all" ? "All Media" : filter === "photos" ? "Photos" : "Videos"}
-            </button>
+            </Button>
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors">
+              <Button variant="ghost" size="icon" aria-label="Move media selector" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground transition-colors">
                 <MoreVertical className="h-4 w-4" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={filterSide === "right" ? "end" : "start"}>
               <DropdownMenuItem onClick={toggleFilterSide} className="gap-2">
@@ -217,7 +218,7 @@ const Home = () => {
         .map((post) => (
           <div
             key={post.id}
-            className={`snap-start ${hideControls ? "" : filterSide === "right" ? "pr-16" : "pl-16"}`}
+            className="snap-start"
           >
           <FeedCard
             post={post}

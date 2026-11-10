@@ -119,8 +119,8 @@
 .birthday-wheel-item { display:flex; height:36px; min-height:36px; width:100%; scroll-snap-align:center; border-radius:4px; color:hsl(var(--welcome-muted)); font-size:16px; }
 .birthday-wheel-item.selected { color:hsl(var(--welcome-foreground)); background:hsl(var(--welcome-muted) / .15); font-weight:700; }
 .birthday-wheel-item:hover { background:hsl(var(--welcome-muted) / .15); color:hsl(var(--welcome-foreground)); }
-.dynamite-button { position:relative; width:100%; height:64px; border-radius:32px / 12px; background:hsl(var(--dynamite)); color:hsl(var(--welcome-foreground)); border:2px solid hsl(var(--dynamite-dark)); box-shadow:var(--dynamite-shadow); font-size:19px; font-weight:700; gap:10px; }
-.dynamite-button:hover { background:hsl(var(--dynamite)); filter:brightness(1.12); }
-.dynamite-fuse { position:absolute; top:-22px; right:28px; height:24px; border-left:3px solid hsl(var(--welcome-muted)); transform:rotate(22deg); }
-.dynamite-fuse svg { position:absolute; top:-13px; left:-10px; }
+.dynamite-button { position:relative; display:block; width:100%; height:auto; aspect-ratio:3 / 1; padding:0; border:0; background:none; color:hsl(var(--welcome-foreground)); font-size:18px; font-weight:700; }
+.dynamite-button:hover { background:none; color:hsl(var(--welcome-foreground)); filter:brightness(1.12); }
+.dynamite-art { display:block; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+.dynamite-label { position:absolute; inset:49% 20% 18% 5%; display:flex; align-items:center; justify-content:center; gap:8px; white-space:nowrap; }
 @media(max-width:640px) { .welcome-scene { min-height:94svh; } .welcome-content { padding-top:20px; } .welcome-art { object-position:65% center; } .welcome-shade { background:hsl(var(--welcome-background) / .82); } .welcome-content h1 { font-size:56px; } }
