@@ -387,6 +387,21 @@ export type Database = {
           },
         ]
       }
+      platform_content_owner: {
+        Row: {
+          id: boolean
+          user_id: string
+        }
+        Insert: {
+          id?: boolean
+          user_id: string
+        }
+        Update: {
+          id?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_originals: {
         Row: {
           id: string
@@ -462,6 +477,7 @@ export type Database = {
           category: string
           comments_count: number
           created_at: string
+          guest_transferred_at: string | null
           id: string
           image_url: string | null
           is_family_friendly: boolean
@@ -484,6 +500,7 @@ export type Database = {
           category?: string
           comments_count?: number
           created_at?: string
+          guest_transferred_at?: string | null
           id?: string
           image_url?: string | null
           is_family_friendly?: boolean
@@ -506,6 +523,7 @@ export type Database = {
           category?: string
           comments_count?: number
           created_at?: string
+          guest_transferred_at?: string | null
           id?: string
           image_url?: string | null
           is_family_friendly?: boolean
@@ -756,16 +774,19 @@ export type Database = {
         Row: {
           age_verified_at: string
           is_guest: boolean
+          signed_out_at: string | null
           user_id: string
         }
         Insert: {
           age_verified_at?: string
           is_guest?: boolean
+          signed_out_at?: string | null
           user_id: string
         }
         Update: {
           age_verified_at?: string
           is_guest?: boolean
+          signed_out_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -815,6 +836,7 @@ export type Database = {
           category: string
           comments_count: number
           created_at: string
+          guest_transferred_at: string | null
           id: string
           image_url: string | null
           is_family_friendly: boolean
@@ -882,6 +904,10 @@ export type Database = {
           p_user: string
         }
         Returns: Json
+      }
+      transfer_guest_content: {
+        Args: { p_guest: string; p_media: Json }
+        Returns: string
       }
     }
     Enums: {
