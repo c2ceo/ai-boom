@@ -85,6 +85,13 @@
       "when": 1794278041502,
       "tag": "0011_guest_content_transfer",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794278209124,
+      "tag": "0012_guest_session_delete_guard",
+      "breakpoints": true
     }
   ]
 }
