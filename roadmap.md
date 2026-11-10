@@ -14,4 +14,4 @@
 - [x] AI tool badge on opposite side of media type selector
 - [x] Create page: default AI Image tab; order AI Image, AI Video, Upload
 
-- [ ] Remove the first-100-accounts weekly allowance and verify paid generation requirements
+- [x] Remove the first-100-accounts weekly allowance and verify paid generation requirements
