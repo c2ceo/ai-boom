@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check, Eye } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import JokeCreator from '@/components/JokeCreator';
+import { GUEST_PUBLISH_MESSAGE } from '../../supabase/functions/_shared/economics';
 import { IMAGE_MODELS, SCHNELL_FREE_LIMIT, imageCreditCost, type ImageModel } from "../../supabase/functions/_shared/image-models";
 
 const aiTools: string[] = []; // kept for potential future use
@@ -37,6 +40,8 @@ const Create = () => {
   const [loading, setLoading] = useState(false);
   const [allowEvolve, setAllowEvolve] = useState(false);
   const [sharePrompt, setSharePrompt] = useState(false);
+  const [privatePost,setPrivatePost]=useState(false);
+  const [guestPending,setGuestPending]=useState(false);
   const [generating, setGenerating] = useState(false);
   const [aiCheckResult, setAiCheckResult] = useState<{ is_ai_generated: boolean; confidence: number; reason: string; is_family_friendly?: boolean } | null>(null);
   const [checking, setChecking] = useState(false);
@@ -92,6 +97,13 @@ const Create = () => {
     fetchCredits();
     if (user) refreshPromotion();
   }, [fetchCredits, refreshPromotion, user]);
+  useEffect(()=>{
+    if(!isGuest)return;
+    supabase.rpc('pending_guest_image').then(({data})=>{
+      const pending=data as {image_url?:string}|null;
+      if(pending?.image_url){setGeneratedImage(pending.image_url);setGuestPending(true);setMode('generate');setAiTool('fal.ai');}
+    });
+  },[isGuest,user?.id]);
 
   // Handle returning from Stripe checkout
   useEffect(() => {
@@ -191,6 +203,7 @@ const Create = () => {
   };
 
   const handleGenerate = async () => {
+    if(isGuest && guestPending){toast({title:'Publish your image first',description:GUEST_PUBLISH_MESSAGE});return;}
     if (!prompt.trim()) return;
     setGenerating(true);
     try {
@@ -208,6 +221,7 @@ const Create = () => {
       if (data?.error) throw new Error(data.error);
       if (data?.imageUrl) {
         setGeneratedImage(data.imageUrl);
+        if(isGuest){setGuestPending(true);toast({title:'Image ready to publish',description:GUEST_PUBLISH_MESSAGE});}
         setAiTool("fal.ai");
         fetchCredits(); // refresh credits count
       }
@@ -221,6 +235,7 @@ const Create = () => {
   };
 
   const handleEnhancePrompt = async () => {
+    if(isGuest && guestPending){toast({title:'Publish your image first',description:GUEST_PUBLISH_MESSAGE});return;}
     if (!prompt.trim()) return;
     setEnhancing(true);
     try {
@@ -399,6 +414,19 @@ const Create = () => {
         else if (mode === "upload" && photoEdited) promptToShare = editPrompt;
       }
 
+      if(privatePost && isGuest)throw new Error('Guest accounts cannot make private posts.');
+      if(privatePost && uploadedUrl){
+        // Copy into owner-only storage; never retain a public URL on a private post.
+        const response=await fetch(uploadedUrl);
+        if(!response.ok)throw new Error('Unable to prepare private media');
+        const blob=await response.blob();
+        const privatePath=`${user.id}/${crypto.randomUUID()}.${isVideo?'mp4':'jpg'}`;
+        const {error:privateError}=await supabase.storage.from('private-media').upload(privatePath,blob,{contentType:blob.type});
+        if(privateError)throw privateError;
+        const publicPath=uploadedUrl.split('/media/')[1];
+        if(publicPath){const {error:removeError}=await supabase.storage.from('media').remove([decodeURIComponent(publicPath)]);if(removeError)throw removeError;}
+        uploadedUrl=`private-media:${privatePath}`;
+      }
       const { error } = await supabase.from("posts").insert({
         user_id: user.id,
         image_url: isVideo ? null : uploadedUrl,
@@ -409,6 +437,7 @@ const Create = () => {
         ai_tool: mode === "generate" ? "fal.ai" : mode === "video" ? "fal.ai" : aiTool,
         allow_evolve: allowEvolve,
         shared_prompt: promptToShare,
+        is_private:privatePost && !isGuest,
       } as any);
 
       if (error) throw error;
@@ -561,19 +590,17 @@ const Create = () => {
           <Card className="bg-card/50 mb-4">
             <CardContent className="p-4 space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="image-model">Image model</Label>
-                <Select value={imageModel} onValueChange={(value) => setImageModel(value as ImageModel)} disabled={generating || enhancing}>
-                  <SelectTrigger id="image-model"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="schnell">FLUX Schnell · {freeReserved === null ? "Checking price…" : freeReserved < SCHNELL_FREE_LIMIT ? "Free" : "1 credit"}</SelectItem>
-                    <SelectItem value="dev" disabled={isGuest}>FLUX Dev · 5 credits ($0.10)</SelectItem>
-                    <SelectItem value="pro" disabled={isGuest}>FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Image quality</Label>
+                <ToggleGroup type="single" value={imageModel} onValueChange={value=>{if(value)setImageModel(value as ImageModel);}} className="grid grid-cols-3 gap-1" disabled={generating || enhancing || (isGuest && guestPending)}>
+                  {Object.entries(IMAGE_MODELS).map(([key,model])=>{
+                    const cost=imageCreditCost(key as ImageModel,freeReserved ?? SCHNELL_FREE_LIMIT);
+                    return <ToggleGroupItem key={key} value={key} disabled={isGuest && key!=='schnell'} className="h-20 min-w-0 flex-col gap-1 border border-border px-1 text-center text-xs data-[state=on]:border-primary data-[state=on]:bg-primary/10 data-[state=on]:text-primary"><span className="whitespace-normal font-semibold">{model.tier}</span><span>{freeReserved===null?'…':cost===0?'Free':`${cost} credits`}</span><span className="text-[10px] text-muted-foreground">{cost>0?`$${(cost*.02).toFixed(2)}`:model.label}</span></ToggleGroupItem>;
+                  })}
+                </ToggleGroup>
                 {imageModel === "schnell" && freeReserved !== null && freeReserved < SCHNELL_FREE_LIMIT && (
                   <p className="text-xs text-muted-foreground">{(SCHNELL_FREE_LIMIT - freeReserved).toLocaleString()} free Schnell images remaining across AI-BOOM; then 1 credit ($0.02) each.</p>
                 )}
-                <Button type="button" variant="outline" size="sm" onClick={handleEnhancePrompt} disabled={!prompt.trim() || enhancing || generating} className="gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleEnhancePrompt} disabled={!prompt.trim() || enhancing || generating || (isGuest && guestPending)} className="gap-2">
                   {enhancing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Enhance Prompt
                 </Button>
               </div>
@@ -587,7 +614,8 @@ const Create = () => {
                       onClick={() => setLightboxOpen(true)}
                     />
                     <button
-                      onClick={() => { setGeneratedImage(null); }}
+                      onClick={() => { if(isGuest && guestPending){toast({title:'Publish your image first',description:GUEST_PUBLISH_MESSAGE});return;}setGeneratedImage(null); }}
+                      aria-label="Remove generated image"
                       className="absolute top-2 right-2 rounded-full bg-background/80 p-1"
                     >
                       <X className="h-4 w-4" />
@@ -595,6 +623,7 @@ const Create = () => {
                   </div>
                   <Textarea
                     placeholder="Edit your prompt and regenerate..."
+                    readOnly={isGuest && guestPending}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={2}
@@ -603,6 +632,7 @@ const Create = () => {
                     <Sparkles className="h-4 w-4" />
                     {generating ? "Regenerating..." : `Regenerate · ${imageCost === 0 ? "Free" : `${imageCost} credits`}`}
                   </Button>
+                  {isGuest && guestPending && <p role="status" className="text-sm text-muted-foreground">{GUEST_PUBLISH_MESSAGE}</p>}
                 </>
               ) : (
                 <>
@@ -841,7 +871,11 @@ const Create = () => {
           <Switch id="share-prompt" checked={sharePrompt} onCheckedChange={setSharePrompt} />
         </div>
 
-        <Button onClick={handlePost} disabled={loading || checking || generatingVideo} className="w-full" size="lg">
+        <div className="flex items-center justify-between border-y border-border py-4">
+          <Label htmlFor="private-post">Private post</Label>
+          <Switch id="private-post" checked={privatePost} onCheckedChange={setPrivatePost} disabled={isGuest}/>
+        </div>
+        <Button onClick={handlePost} disabled={loading || checking || generatingVideo || generating} className="w-full" size="lg">
           {checking ? (
             <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Checking AI content...</>
           ) : loading ? (
@@ -851,6 +885,7 @@ const Create = () => {
           )}
         </Button>
 
+        <JokeCreator onCaption={setCaption}/>
         {aiCheckResult && (
           <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
             aiCheckResult.is_ai_generated && aiCheckResult.confidence >= 0.7

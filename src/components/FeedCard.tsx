@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +54,8 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const [evolving, setEvolving] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
+  const resolvedImage=useMediaUrl(currentImageUrl);
+  const resolvedVideo=useMediaUrl(post.video_url);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
