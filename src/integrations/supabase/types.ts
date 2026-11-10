@@ -584,6 +584,24 @@ export type Database = {
           },
         ]
       }
+      safe_media: {
+        Row: {
+          created_at: string
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          media_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_credit_purchases: {
         Row: {
           created_at: string
@@ -677,6 +695,24 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_admissions: {
+        Row: {
+          age_verified_at: string
+          is_guest: boolean
+          user_id: string
+        }
+        Insert: {
+          age_verified_at?: string
+          is_guest?: boolean
+          user_id: string
+        }
+        Update: {
+          age_verified_at?: string
+          is_guest?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -684,6 +720,7 @@ export type Database = {
     Functions: {
       can_view_post: { Args: { _post: string }; Returns: boolean }
       can_view_user: { Args: { _target: string }; Returns: boolean }
+      confirm_visitor_age: { Args: { p_birthday: string }; Returns: undefined }
       finish_image_request: {
         Args: { p_id: string; p_success: boolean; p_url?: string }
         Returns: undefined
