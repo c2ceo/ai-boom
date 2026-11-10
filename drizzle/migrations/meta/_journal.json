@@ -71,6 +71,13 @@
       "when": 1794275590963,
       "tag": "0009_finish_joke_budget_transition",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794276741518,
+      "tag": "0010_joke_posts",
+      "breakpoints": true
     }
   ]
 }
