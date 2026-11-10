@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
    if(error) throw error;
    return reply({prompt:enhanced});
   }
-  const response=await fetch(`https://fal.run/${IMAGE_MODELS[input.model].endpoint}`,{method:"POST",headers:{Authorization:`Key ${key}`,"Content-Type":"application/json"},body:JSON.stringify({prompt:input.prompt,image_size:"landscape_16_9",num_images:1,enable_safety_checker:true,...(input.model === "pro" ? {safety_tolerance:"1"} : {})})});
+  const response=await fetch(`https://fal.run/${IMAGE_MODELS[input.model].endpoint}`,{method:"POST",headers:{Authorization:`Key ${key}`,"Content-Type":"application/json"},body:JSON.stringify({prompt:input.prompt,image_size:{width:1024,height:576},num_images:1,enable_safety_checker:true,...(input.model === "pro" ? {safety_tolerance:"1"} : {})})});
   if(!response.ok) throw new Error(`Image generation failed (${response.status})`);
   const data=await response.json();
   if(guest && (!Array.isArray(data.has_nsfw_concepts) || data.has_nsfw_concepts.length === 0)) throw new Error('Unable to confirm image safety; please try another prompt');

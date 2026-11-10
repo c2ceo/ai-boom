@@ -211,7 +211,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       >
         {post.video_url ? (
           <video
-            src={post.video_url}
+            src={resolvedVideo}
             className="w-full object-contain"
             loop
             muted
@@ -221,7 +221,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
         ) : currentImageUrl ? (
           <div className="relative">
             <img
-              src={showingOriginal ? originalImageUrl! : currentImageUrl!}
+              src={showingOriginal ? originalImageUrl ?? undefined : resolvedImage}
               alt={post.caption || "AI generated content"}
               className="w-full object-contain transition-opacity duration-200"
               loading="lazy"
