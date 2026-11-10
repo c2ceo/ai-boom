@@ -12,7 +12,8 @@ serve(async (req) => {
   try {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const authHeader = req.headers.get("Authorization");
-    const authClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const backendUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const authClient = createClient(backendUrl, Deno.env.get("SUPABASE_ANON_KEY") ?? "");
     const { data: claimsData } = authHeader?.startsWith("Bearer ")
       ? await authClient.auth.getClaims(authHeader.replace("Bearer ", ""))
       : { data: null };
@@ -28,6 +29,11 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const ownPrefix = `${backendUrl}/storage/v1/object/public/media/${userId}/`;
+    if (typeof imageUrl !== 'string' || !imageUrl.startsWith(ownPrefix) || imageUrl.includes('/../')) {
+      return new Response(JSON.stringify({error:'Only your own uploaded images can be checked'}), {status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -128,10 +134,14 @@ Respond ONLY with JSON.`,
     const data = await response.json();
 
     const recordVerified = async (result: any) => {
+      const admin = createClient(backendUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+      if(result?.is_family_friendly === true) {
+        const {error}=await admin.from('safe_media').upsert({media_url:imageUrl,user_id:userId});
+        if(error) throw error;
+      }
       const ownPrefix = `/storage/v1/object/public/media/${userId}/`;
       if (result?.is_ai_generated && Number(result.confidence) >= 0.7 && result.is_family_friendly !== false
-          && typeof imageUrl === "string" && imageUrl.startsWith(Deno.env.get("SUPABASE_URL")! + ownPrefix)) {
-        const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+          && typeof imageUrl === "string" && imageUrl.startsWith(backendUrl + ownPrefix)) {
         await admin.from("verified_media").upsert({ media_url: imageUrl, user_id: userId });
       }
     };

@@ -4,6 +4,7 @@ import { z } from "npm:zod@3.25.76";
 import { generateResponse, GatewayError } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import type {} from "../_shared/ai-gateway/models.d.ts";
 import { IMAGE_MODELS } from "../_shared/image-models.ts";
+import { guestModelAllowed } from "../_shared/visitor.ts";
 const schema = z.object({ action: z.enum(["generate","enhance"]).default("generate"), prompt: z.string().trim().min(1).max(4000), model: z.enum(["schnell","dev","pro"]).default("dev"), request_id: z.string().uuid(), max_credits: z.number().int().min(0).max(8) });
 const explicit = /\b(nude|naked|nsfw|porn|xxx|hentai|erotic|sexual|genitalia|explicit|uncensored|topless|bottomless|intercourse|orgasm|masturbat|fetish|bondage|bdsm)\b/i;
 const reply = (body: object, status=200) => new Response(JSON.stringify(body), {status, headers:{...corsHeaders,"Content-Type":"application/json"}});
@@ -22,6 +23,9 @@ Deno.serve(async (req) => {
   const parsed=schema.safeParse(await req.json().catch(()=>null));
   if(!parsed.success) return reply({error:"Invalid prompt or image request"},400);
   const input=parsed.data;
+  const {data:admission}=await admin.from('visitor_admissions').select('is_guest').eq('user_id',identity.user.id).maybeSingle();
+  const guest=admission?.is_guest === true;
+  if(guest && !guestModelAllowed(input.model,input.max_credits)) return reply({error:'Guests can create free FLUX Schnell images during the shared promotion.'},403);
   if(explicit.test(input.prompt)) return reply({error:"Nudity and explicit content are prohibited",explicit_blocked:true},400);
   const key=Deno.env.get("FAL_API_KEY");
   if(input.action === "generate" && !key) return reply({error:"Image service unavailable"},503);
@@ -32,6 +36,7 @@ Deno.serve(async (req) => {
    return reply({error:"This request is already running or failed; start a new request"},409);
   }
   reservedId=input.request_id;
+  if(guest && r.credits !== 0) throw new Error('The free promotion has ended. Create an account to purchase credits.');
   if(input.action === "enhance") {
    const result=await generateResponse({model:"openai/gpt-6-astra",input:input.prompt,instructions:"Rewrite this image prompt for precise visual generation. Preserve every subject, number, quoted text, spatial relationship, requested style and exclusion. Add only compatible composition, lighting and material detail. Do not invent subjects or change intent. Return only the rewritten prompt, under 4000 characters. Never add nudity or explicit content."});
    const enhanced=result.output.flatMap(item=>item.type === "message" ? item.content.flatMap(part=>part.type === "output_text" ? [part.text] : []) : []).join("\n").trim();
@@ -43,6 +48,7 @@ Deno.serve(async (req) => {
   const response=await fetch(`https://fal.run/${IMAGE_MODELS[input.model].endpoint}`,{method:"POST",headers:{Authorization:`Key ${key}`,"Content-Type":"application/json"},body:JSON.stringify({prompt:input.prompt,image_size:"landscape_16_9",num_images:1,enable_safety_checker:true,...(input.model === "pro" ? {safety_tolerance:"1"} : {})})});
   if(!response.ok) throw new Error(`Image generation failed (${response.status})`);
   const data=await response.json();
+  if(guest && (!Array.isArray(data.has_nsfw_concepts) || data.has_nsfw_concepts.length === 0)) throw new Error('Unable to confirm image safety; please try another prompt');
   if(data.has_nsfw_concepts?.some(Boolean)) throw new Error("Image blocked by safety checker");
   const imageUrl=data.images?.[0]?.url;
   if(!imageUrl) throw new Error("No image returned");
@@ -56,6 +62,10 @@ Deno.serve(async (req) => {
   const {data:publicUrl}=admin.storage.from("media").getPublicUrl(path);
   const {error:verifyError}=await admin.from("verified_media").insert({media_url:publicUrl.publicUrl,user_id:identity.user.id});
   if(verifyError) throw verifyError;
+  if(guest) {
+   const {error:safetyError}=await admin.from('safe_media').upsert({media_url:publicUrl.publicUrl,user_id:identity.user.id});
+   if(safetyError) throw safetyError;
+  }
   const {error:finishError}=await admin.rpc("finish_image_request",{p_id:reservedId,p_success:true,p_url:publicUrl.publicUrl});
   if(finishError) throw finishError;
   return reply({imageUrl:publicUrl.publicUrl,model:input.model,credits_used:r.credits});
