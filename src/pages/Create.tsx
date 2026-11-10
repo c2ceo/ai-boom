@@ -566,8 +566,8 @@ const Create = () => {
                   <SelectTrigger id="image-model"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="schnell">FLUX Schnell · {freeReserved === null ? "Checking price…" : freeReserved < SCHNELL_FREE_LIMIT ? "Free" : "1 credit"}</SelectItem>
-                    <SelectItem value="dev">FLUX Dev · 5 credits ($0.10)</SelectItem>
-                    <SelectItem value="pro">FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
+                    <SelectItem value="dev" disabled={isGuest}>FLUX Dev · 5 credits ($0.10)</SelectItem>
+                    <SelectItem value="pro" disabled={isGuest}>FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
                   </SelectContent>
                 </Select>
                 {imageModel === "schnell" && freeReserved !== null && freeReserved < SCHNELL_FREE_LIMIT && (

@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
-import DevToggle from "@/components/DevToggle";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import Create from "./pages/Create";
@@ -53,7 +52,6 @@ const AppLayout = ({ children, hideThemeToggle }: { children: React.ReactNode; h
         <ThemeToggle />
       </div>
     )}
-    <DevToggle />
     {children}
     <BottomNav />
   </div>
