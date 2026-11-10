@@ -479,7 +479,7 @@ const Create = () => {
         </TabsList>
 
         <TabsContent value="joke">
-          <JokeCreator onCaption={(j)=>{setCaption(j);setMode('generate');toast({title:'Caption added',description:'Create or upload an image to post it with.'});}}/>
+          <JokeCreator/>
         </TabsContent>
 
         <TabsContent value="upload">
