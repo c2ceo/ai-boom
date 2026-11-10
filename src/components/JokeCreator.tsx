@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { jokeCredits,JOKE_INPUT_LIMIT } from '../../supabase/functions/_shared/jokes';
+import { jokeCredits,jokeQuote,JOKE_INPUT_LIMIT } from '../../supabase/functions/_shared/jokes';
 import { useToast } from '@/hooks/use-toast';
 export default function JokeCreator({onCaption}:{onCaption:(joke:string)=>void}){
  const [prompt,setPrompt]=useState('');const [joke,setJoke]=useState('');const [busy,setBusy]=useState(false);const [spent,setSpent]=useState<number|null>(null);
  const {toast}=useToast();
  const refresh=()=>supabase.from('joke_budget').select('spent_usd').eq('id',true).maybeSingle().then(({data,error})=>{if(!error)setSpent(Number(data?.spent_usd ?? 0));});
  useEffect(()=>{void refresh();},[]);
- const cost=jokeCredits(prompt,spent ?? 1000);
+ const cost=jokeCredits(prompt,spent===null || spent+jokeQuote(prompt)>1000 ? 1000 : spent);
  const generate=async()=>{
   setBusy(true);
   try{

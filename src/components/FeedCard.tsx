@@ -224,7 +224,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               src={showingOriginal ? originalImageUrl ?? undefined : resolvedImage}
               alt={post.caption || "AI generated content"}
               className="w-full object-contain transition-opacity duration-200"
-              loading="lazy"
+              loading={currentImageUrl.startsWith('private-media:') ? 'eager' : 'lazy'}
             />
             {showingOriginal && (
               <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-foreground">

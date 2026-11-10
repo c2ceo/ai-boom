@@ -1,7 +1,7 @@
 # Roadmap
-- [ ] Add image quality tiers and fee-aware 3.2× pricing
-- [ ] Add birthday wheels, account-only private posts, and enforced guest publish-before-retry
-- [ ] Add safe short jokes with shared $1,000 budget and fee-aware paid pricing
+- [x] Add image quality tiers and fee-aware 3.2× pricing
+- [x] Add birthday wheels, account-only private posts, and enforced guest publish-before-retry
+- [x] Add safe short jokes with shared $1,000 budget and fee-aware paid pricing
 - [x] Add age-checked welcome page, required guest/account entry, random guest handles, and safe guest Schnell creation/uploads
 - [x] Add Schnell/Dev/Pro image options, shared million-image Schnell promotion, and prompt enhancement; verify pricing and generation.
 - [x] Check SSL for AI-BOOM and all connected domains/pages; resolve any setup issues
