@@ -1,5 +1,5 @@
 import { creditsForCost } from './economics.ts';
-export const JOKE_FREE_BUDGET_USD=1000;
+export const JOKE_FREE_BUDGET_USD=150;
 export const JOKE_MAX_CHARACTERS=500;
 export const JOKE_INPUT_LIMIT=8000;
 export const JOKE_OUTPUT_TOKENS=1500;

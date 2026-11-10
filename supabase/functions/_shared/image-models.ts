@@ -1,5 +1,5 @@
 import { creditsForCost } from './economics.ts';
-export const SCHNELL_FREE_LIMIT = 1_000_000;
+export const SCHNELL_FREE_LIMIT = 10_000;
 export const IMAGE_MODELS = {
   schnell: { label: "FLUX Schnell", tier: 'Fast', endpoint: "fal-ai/flux/schnell", credits: creditsForCost(0.003) },
   dev: { label: "FLUX Dev", tier: 'High Quality', endpoint: "fal-ai/flux/dev", credits: creditsForCost(0.025) },

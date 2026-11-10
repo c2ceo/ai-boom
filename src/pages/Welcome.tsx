@@ -51,10 +51,10 @@ export default function Welcome() {
     <span className="text-xs text-welcome-muted">IMAGINATION, UNLEASHED.</span>
    </header>
    <div className="welcome-content">
-    <div className="flex items-center gap-2 text-sm font-semibold text-welcome-mint"><Sparkles className="h-4 w-4" /> A million reasons to create</div>
+    <div className="flex items-center gap-2 text-sm font-semibold text-welcome-mint"><Sparkles className="h-4 w-4" /> 10,000 reasons to create</div>
     <h1 className="mt-4 text-6xl font-bold leading-none sm:text-7xl">AI-BOOM</h1>
-    <p className="mt-5 max-w-md text-2xl font-semibold leading-tight">The first 1,000,000 AI photo generations are free.</p>
-    <p className="mt-3 max-w-md text-sm leading-relaxed text-welcome-muted">Free FLUX Schnell generations, shared across the whole app. After the first million, just 1 credit per image.</p>
+    <p className="mt-5 max-w-md text-2xl font-semibold leading-tight">The first 10,000 AI photo generations are free.</p>
+    <p className="mt-3 max-w-md text-sm leading-relaxed text-welcome-muted">Free FLUX Schnell generations, shared across the whole app. After the first 10,000, just 1 credit per image.</p>
     <p className="mt-4 max-w-md text-base leading-relaxed">Anyone 13+ can browse, upload, and create without making an account. Just sign in as a guest.</p>
     <div className="mt-6 max-w-sm space-y-4">
      {!user && <div className="grid grid-cols-2 gap-2" aria-label="Entry method">
