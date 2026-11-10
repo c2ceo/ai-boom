@@ -221,6 +221,60 @@ export type Database = {
         }
         Relationships: []
       }
+      joke_budget: {
+        Row: {
+          id: boolean
+          reserved_usd: number
+          spent_usd: number
+        }
+        Insert: {
+          id?: boolean
+          reserved_usd?: number
+          spent_usd?: number
+        }
+        Update: {
+          id?: boolean
+          reserved_usd?: number
+          spent_usd?: number
+        }
+        Relationships: []
+      }
+      joke_requests: {
+        Row: {
+          actual_usd: number | null
+          created_at: string
+          credits: number
+          id: string
+          joke: string | null
+          promotional: boolean
+          quote_usd: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          actual_usd?: number | null
+          created_at?: string
+          credits?: number
+          id: string
+          joke?: string | null
+          promotional: boolean
+          quote_usd: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          actual_usd?: number | null
+          created_at?: string
+          credits?: number
+          id?: string
+          joke?: string | null
+          promotional?: boolean
+          quote_usd?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -411,6 +465,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_family_friendly: boolean
+          is_private: boolean
           is_verified_ai: boolean
           likes_count: number
           shared_prompt: string | null
@@ -432,6 +487,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_family_friendly?: boolean
+          is_private?: boolean
           is_verified_ai?: boolean
           likes_count?: number
           shared_prompt?: string | null
@@ -453,6 +509,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_family_friendly?: boolean
+          is_private?: boolean
           is_verified_ai?: boolean
           likes_count?: number
           shared_prompt?: string | null
@@ -725,6 +782,15 @@ export type Database = {
         Args: { p_id: string; p_success: boolean; p_url?: string }
         Returns: undefined
       }
+      finish_joke: {
+        Args: {
+          p_actual: number
+          p_id: string
+          p_joke: string
+          p_success: boolean
+        }
+        Returns: number
+      }
       fulfill_stripe_credits: {
         Args: { p_credits: number; p_session_id: string; p_user_id: string }
         Returns: boolean
@@ -752,6 +818,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_family_friendly: boolean
+          is_private: boolean
           is_verified_ai: boolean
           likes_count: number
           shared_prompt: string | null
@@ -796,12 +863,22 @@ export type Database = {
         }
         Returns: undefined
       }
+      pending_guest_image: { Args: never; Returns: Json }
       record_post_view: { Args: { p_post_id: string }; Returns: undefined }
       reserve_image_request: {
         Args: {
           p_id: string
           p_max_credits: number
           p_model: string
+          p_user: string
+        }
+        Returns: Json
+      }
+      reserve_joke: {
+        Args: {
+          p_id: string
+          p_max_credits: number
+          p_quote: number
           p_user: string
         }
         Returns: Json

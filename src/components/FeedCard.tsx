@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,6 +54,8 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
   const [viewsCount, setViewsCount] = useState(post.views_count || 0);
   const [evolving, setEvolving] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(post.image_url);
+  const resolvedImage=useMediaUrl(currentImageUrl);
+  const resolvedVideo=useMediaUrl(post.video_url);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [showingOriginal, setShowingOriginal] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -208,7 +211,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       >
         {post.video_url ? (
           <video
-            src={post.video_url}
+            src={resolvedVideo}
             className="w-full object-contain"
             loop
             muted
@@ -218,10 +221,10 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
         ) : currentImageUrl ? (
           <div className="relative">
             <img
-              src={showingOriginal ? originalImageUrl! : currentImageUrl!}
+              src={showingOriginal ? originalImageUrl ?? undefined : resolvedImage}
               alt={post.caption || "AI generated content"}
               className="w-full object-contain transition-opacity duration-200"
-              loading="lazy"
+              loading={currentImageUrl.startsWith('private-media:') ? 'eager' : 'lazy'}
             />
             {showingOriginal && (
               <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-foreground">

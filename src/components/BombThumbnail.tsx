@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Sparkles, Flame } from "lucide-react";
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 
 interface BombThumbnailProps {
   imageUrl?: string | null;
@@ -12,6 +13,8 @@ interface BombThumbnailProps {
 
 const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombThumbnailProps) => {
   const [exploding, setExploding] = useState(false);
+  const resolvedImage=useMediaUrl(imageUrl);
+  const resolvedVideo=useMediaUrl(videoUrl);
 
   const handleClick = () => {
     setExploding(true);
@@ -183,7 +186,7 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
           {videoUrl ? (
             <div className="relative h-full w-full">
               <video
-                src={`${videoUrl}#t=0.1`}
+                src={resolvedVideo ? `${resolvedVideo}#t=0.1` : undefined}
                 className="h-full w-full object-cover"
                 muted
                 playsInline
@@ -195,7 +198,7 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
             </div>
           ) : imageUrl ? (
             <img
-              src={imageUrl}
+              src={resolvedImage}
               alt={caption || "AI content"}
               className="h-full w-full object-cover"
               loading="lazy"

@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.guest-entry]
 verify_jwt = false
 
+[functions.create-joke]
+verify_jwt = false
+
 [functions.ai-filter]
 verify_jwt = false
 

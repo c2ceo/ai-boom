@@ -131,8 +131,8 @@ const Profile = () => {
       const { data: postsData } = await supabase
         .from("posts")
         .select("*")
-        .eq("user_id", targetUserId!)
-        .eq("status", "approved")
+        .eq("user_id", targetUserId ?? '')
+        .or(isOwnProfile ? 'status.eq.approved,is_private.eq.true' : 'status.eq.approved')
         .order("created_at", { ascending: false });
       setPosts(postsData || []);
     } else {

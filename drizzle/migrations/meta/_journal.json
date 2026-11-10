@@ -50,6 +50,27 @@
       "when": 1794273594308,
       "tag": "0006_guest_admission_and_safe_media",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794274955464,
+      "tag": "0007_private_posts_guest_pending_and_joke_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794275352515,
+      "tag": "0008_correct_guest_reservation_alias",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794275590963,
+      "tag": "0009_finish_joke_budget_transition",
+      "breakpoints": true
     }
   ]
 }

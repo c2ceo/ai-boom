@@ -1,4 +1,8 @@
 # Architecture
+- Private posts store opaque owner-only media paths and resolve signed URLs on viewing; RLS and visibility helpers restrict post rows to the owner.
+- Guest image reservations refuse further requests until the completed image has a matching published post; pending media restores through an owner-scoped RPC.
+- Joke generation reserves a conservative token-cost quote atomically, settles returned usage once, and uses the existing credit balance after the shared cost budget.
+- Paid generation prices round up from provider cost and net proceeds per purchased credit; API output dimensions stay within one billable megapixel.
 - Guest entry uses server-created random credentials and owner-scoped admission records, not anonymous auth or shared accounts; this preserves ownership without collecting guest email.
 - Require authenticated age admission before app browsing; birthdays are validated server-side but not retained.
 - Guest publishing requires a server-recorded safe image owned by the guest; unsafe or unchecked media and guest videos fail closed.
