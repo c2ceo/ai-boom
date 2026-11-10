@@ -27,7 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
-  const { signOut } = useAuth();
+  const { signOut, isGuest } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -35,6 +35,7 @@ const Settings = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [showAgeVerify, setShowAgeVerify] = useState(false);
   const [showPasswordSetup, setShowPasswordSetup] = useState(false);
   const [ageInput, setAgeInput] = useState("");
@@ -70,8 +71,13 @@ const Settings = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate('/welcome');
+    } catch (error) {
+      toast({ title: 'Unable to sign out', description: error instanceof Error ? error.message : 'Please try again.', variant: 'destructive' });
+    } finally { setSigningOut(false); }
   };
 
   const handleDeleteAccount = async () => {
@@ -157,12 +163,12 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Sign Out</AlertDialogTitle>
             <AlertDialogDescription>
-              Do you wish to sign out?
+              {isGuest ? 'Signing out permanently deletes your guest account. Your published posts stay on the app and become AI-Boom’s property. You will no longer be able to edit or delete them.' : 'Do you wish to sign out?'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>No</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSignOut}>Yes</AlertDialogAction>
+            <AlertDialogAction disabled={signingOut} onClick={(event) => { event.preventDefault(); void handleSignOut(); }}>{signingOut ? 'Signing out…' : 'Yes'}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

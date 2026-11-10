@@ -15,7 +15,7 @@ const TermsOfService = () => {
       </div>
 
       <div className="prose prose-sm dark:prose-invert space-y-4 text-sm text-muted-foreground">
-        <p><strong className="text-foreground">Last updated:</strong> March 12, 2026</p>
+        <p><strong className="text-foreground">Last updated:</strong> November 10, 2026</p>
 
         <h2 className="text-foreground text-base font-semibold">1. Acceptance of Terms</h2>
         <p>By using AI-BOOM, you agree to these Terms of Service. If you do not agree, do not use the app.</p>
@@ -27,7 +27,8 @@ const TermsOfService = () => {
         <p>You are responsible for maintaining the security of your account. You must provide accurate information and keep your credentials secure.</p>
 
         <h2 className="text-foreground text-base font-semibold">4. Content Guidelines</h2>
-        <p>You retain ownership of content you post. By posting, you grant AI-BOOM a non-exclusive license to display and distribute your content within the platform. Nudity, explicit content, harassment, and illegal content are strictly prohibited and will be removed.</p>
+        <p>Registered account holders retain ownership of content they post. By posting, you grant AI-BOOM a non-exclusive license to display and distribute your content within the platform. Nudity, explicit content, harassment, and illegal content are strictly prohibited and will be removed.</p>
+        <p>Guest posts stay associated with the guest account until sign-out. Signing out permanently deletes that guest account and transfers its published content to AI-Boom, which keeps the posts available on the app. By entering as a guest, you agree to assign to AI-Boom any transferable rights you hold in that published content upon sign-out, to the extent permitted by applicable law. This does not transfer rights belonging to others or create rights in AI-generated material where none exist. After sign-out you lose guest access and cannot edit or delete those posts through that account.</p>
 
         <h2 className="text-foreground text-base font-semibold">5. AI-Generated Content</h2>
         <p>Content generated using AI-BOOM's tools is subject to the same guidelines. You are responsible for ensuring generated content complies with our policies.</p>
