@@ -36,7 +36,7 @@ export default function JokeCreator(){
   <h2 className="flex items-center gap-2 font-semibold"><Laugh className="h-5 w-5 text-primary"/>AI Joke</h2>
   <Label htmlFor="joke-prompt">Joke topic</Label>
   <Textarea id="joke-prompt" placeholder="What should the joke be about?" value={prompt} onChange={e=>setPrompt(e.target.value)} rows={3}/>
-  <p className="text-xs text-muted-foreground">Up to 250 characters per joke. {prompt.length.toLocaleString()} / 8,000 prompt characters.</p>
+  <p className="text-xs text-muted-foreground">Up to 500 characters per joke. {prompt.length.toLocaleString()} / 8,000 prompt characters.</p>
   <Button onClick={generate} disabled={busy || !prompt.trim() || prompt.length>JOKE_INPUT_LIMIT || spent===null} className="gap-2">{busy?<Loader2 className="h-4 w-4 animate-spin"/>:<Laugh className="h-4 w-4"/>}{busy?'Writing…':`Write joke · ${cost===0?'Free':`up to ${cost} credits`}`}</Button>
   {joke && <div className="space-y-3"><p role="status" className="text-base leading-relaxed">{joke}</p><div className="flex gap-2"><Button size="sm" disabled={posting} onClick={post}>{posting?'Posting…':'Post joke'}</Button><Button variant="ghost" size="icon" aria-label="Copy joke" onClick={()=>navigator.clipboard.writeText(joke).then(()=>toast({title:'Joke copied'}))}><Copy className="h-4 w-4"/></Button></div></div>}
  </section>;

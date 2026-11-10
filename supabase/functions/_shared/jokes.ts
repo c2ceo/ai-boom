@@ -1,6 +1,6 @@
 import { creditsForCost } from './economics.ts';
 export const JOKE_FREE_BUDGET_USD=1000;
-export const JOKE_MAX_CHARACTERS=250;
+export const JOKE_MAX_CHARACTERS=500;
 export const JOKE_INPUT_LIMIT=8000;
 export const JOKE_OUTPUT_TOKENS=512;
 // Standard Astra list rates, matched to the authenticated gateway catalog.
