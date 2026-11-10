@@ -204,8 +204,8 @@ const BombThumbnail = ({ imageUrl, videoUrl, caption, onClick, overlay }: BombTh
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
+            <div className="flex h-full w-full items-center justify-center bg-muted p-3">
+              {caption ? <p className="line-clamp-4 text-center text-[10px] leading-tight text-foreground">{caption}</p> : <Sparkles className="h-5 w-5 text-muted-foreground" />}
             </div>
           )}
 
