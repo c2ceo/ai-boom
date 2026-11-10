@@ -415,7 +415,15 @@ const Profile = () => {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-1">
-            {posts.map((post) => (
+            {posts.map((post) => !post.image_url && !post.video_url ? (
+              <button
+                key={post.id}
+                onClick={() => selectMode ? toggleSelectPost(post.id) : navigate(`/post/${post.id}`)}
+                className={`col-span-3 border-b border-border px-3 py-2 text-left text-sm text-muted-foreground ${selectedPosts.has(post.id) ? "bg-primary/10" : ""}`}
+              >
+                {post.caption}
+              </button>
+            ) : (
               <BombThumbnail
                 key={post.id}
                 imageUrl={post.image_url}
