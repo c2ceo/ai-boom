@@ -13,3 +13,5 @@
 - [x] Center photo + caption when scrolling; collapsible caption/prompt when >2 lines
 - [x] AI tool badge on opposite side of media type selector
 - [x] Create page: default AI Image tab; order AI Image, AI Video, Upload
+
+- [ ] Remove the first-100-accounts weekly allowance and verify paid generation requirements

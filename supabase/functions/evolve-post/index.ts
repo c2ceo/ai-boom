@@ -77,63 +77,23 @@ serve(async (req) => {
 
     const creditCost = 1; // 1 credit per evolve
 
-    // Check free generations first (weekly, first 100 accounts)
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-    const currentWeek = `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
-    const { data: allProfiles } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .order("created_at", { ascending: true })
-      .limit(100);
+    const { data: credits } = await supabase
+      .from("fal_credits")
+      .select("credits_remaining")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    const isEligibleForFree = allProfiles?.some((p: any) => p.user_id === userId) ?? false;
-    let usedFreeGeneration = false;
-
-    if (isEligibleForFree) {
-      const { data: freeGen } = await supabase
-        .from("free_generations")
-        .select("generations_used")
-        .eq("user_id", userId)
-        .eq("month", currentWeek)
-        .maybeSingle();
-
-      if (!freeGen || freeGen.generations_used < 10) {
-        usedFreeGeneration = true;
-        if (freeGen) {
-          await supabase
-            .from("free_generations")
-            .update({ generations_used: freeGen.generations_used + 1 })
-            .eq("user_id", userId)
-            .eq("month", currentWeek);
-        } else {
-          await supabase
-            .from("free_generations")
-            .insert({ user_id: userId, month: currentWeek, generations_used: 1 });
-        }
-      }
+    if (!credits || credits.credits_remaining < creditCost) {
+      return new Response(JSON.stringify({ error: "No credits remaining. Purchase credits to evolve.", needs_credits: true }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    if (!usedFreeGeneration) {
-      const { data: credits } = await supabase
-        .from("fal_credits")
-        .select("credits_remaining")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!credits || credits.credits_remaining < creditCost) {
-        return new Response(JSON.stringify({ error: "No credits remaining. Purchase credits to evolve.", needs_credits: true }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      await supabase
-        .from("fal_credits")
-        .update({ credits_remaining: credits.credits_remaining - creditCost, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
-    }
+    await supabase
+      .from("fal_credits")
+      .update({ credits_remaining: credits.credits_remaining - creditCost, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
 
     // Use fal.ai FLUX for image evolution
     const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
