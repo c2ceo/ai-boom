@@ -263,7 +263,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             <Verified className="h-4 w-4 text-primary" />
           )}
         </div>
-      </div>
+      </div>}
 
       <AnimatePresence>
         {showPrompt && post.shared_prompt && (
