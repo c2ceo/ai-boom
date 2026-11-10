@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ageAllowed } from '../../supabase/functions/_shared/visitor';
 import world from '@/assets/welcome-world.jpg';
+import dynamite from '@/assets/welcome-dynamite.png';
 
 export default function Welcome() {
  const [birthday,setBirthday]=useState('');
@@ -69,9 +70,9 @@ export default function Welcome() {
      <div className="relative pt-3">
       {exploding && !reduced && <motion.div className="pointer-events-none absolute inset-0 rounded-full border-4 border-welcome-spark" initial={{scale:.4,opacity:1}} animate={{scale:2,opacity:0}} transition={{duration:.65}} />}
       <motion.div animate={exploding && !reduced ? {scale:[1,1.08,.95],rotate:[0,3,-3,0]} : {scale:1}} transition={{duration:.6}}>
-       <Button className="dynamite-button" onClick={enter} disabled={busy || !birthday}>
-        <span aria-hidden="true" className="dynamite-fuse"><Flame className="h-5 w-5 text-welcome-spark" /></span>
-        {busy && !exploding ? <Loader2 className="h-5 w-5 animate-spin" /> : <Flame className="h-5 w-5" />} Get to Boomin’
+       <Button variant="ghost" className="dynamite-button" onClick={enter} disabled={busy || !birthday}>
+        <img src={dynamite} alt="" aria-hidden="true" className="dynamite-art" width={1536} height={512}/>
+        <span className="dynamite-label">{busy && !exploding && <Loader2 className="h-5 w-5 animate-spin" />} Get to Boomin’</span>
        </Button>
       </motion.div>
      </div>

@@ -201,7 +201,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     <div className={`snap-center w-full flex flex-col items-center justify-center bg-background ${isText ? "py-2 border-b border-border" : "min-h-[calc(100vh-4rem)] py-4"}`}>
       {/* Media */}
       {!isText && <div
-        className="relative w-full max-w-lg mx-auto cursor-pointer select-none"
+        className="relative w-full cursor-pointer select-none"
         onDoubleClick={handleDoubleTap}
         onMouseDown={handleHoldStart}
         onMouseUp={handleHoldEnd}
@@ -289,7 +289,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
       </AnimatePresence>
 
       {/* Info section below the post */}
-      <div className="max-w-lg mx-auto w-full px-4 py-3">
+      <div className="mx-auto w-full px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Left: user info + caption */}
           <div className="flex-1 min-w-0 mr-2">
