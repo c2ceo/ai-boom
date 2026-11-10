@@ -196,10 +196,11 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
     }
   };
 
+  const isText = !post.video_url && !currentImageUrl;
   return (
-    <div className="snap-center w-full min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-background py-4">
+    <div className={`snap-center w-full flex flex-col items-center justify-center bg-background ${isText ? "py-2 border-b border-border" : "min-h-[calc(100vh-4rem)] py-4"}`}>
       {/* Media */}
-      <div
+      {!isText && <div
         className="relative w-full max-w-lg mx-auto cursor-pointer select-none"
         onDoubleClick={handleDoubleTap}
         onMouseDown={handleHoldStart}
@@ -237,11 +238,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               </div>
             )}
           </div>
-        ) : (
-          <div className="flex aspect-square w-full items-center justify-center bg-muted p-8">
-            {post.caption ? <p className="text-center text-2xl font-semibold leading-snug text-foreground">{post.caption}</p> : <span className="text-muted-foreground">No media</span>}
-          </div>
-        )}
+        ) : null}
 
         {/* Heart animation */}
         <AnimatePresence>
@@ -311,7 +308,7 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               </button>
             </div>
             <div ref={textRef} className={textExpanded ? "" : "line-clamp-2"}>
-            {post.caption && (currentImageUrl || post.video_url) && (
+            {post.caption && (
                 <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
               )}
             </div>
