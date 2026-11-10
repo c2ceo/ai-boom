@@ -37,7 +37,8 @@ serve(async (req) => {
     const parsedUrl = typeof imageUrl === 'string' ? new URL(imageUrl) : null;
     const publicHost = new URL(backendUrl).hostname;
     // Cloud public URLs can use a different gateway host from the internal service URL.
-    const trustedHost = parsedUrl && (parsedUrl.hostname === publicHost || parsedUrl.hostname === `${Deno.env.get('SUPABASE_PROJECT_ID') ?? publicHost.split('.')[0]}.supabase.co`);
+    const projectHost = Deno.env.get('SUPABASE_PROJECT_ID') ?? publicHost.split('.')[0];
+    const trustedHost = parsedUrl && (parsedUrl.hostname === publicHost || parsedUrl.hostname === `${projectHost}.supabase.co` || parsedUrl.hostname === 'wrmmvbqzpnphzhozgxeh.lovable.cloud');
     if (!parsedUrl || !trustedHost || parsedUrl.protocol !== 'https:' || !parsedUrl.pathname.startsWith(ownPath) || imageUrl.includes('/../')) {
       return new Response(JSON.stringify({error:'Only your own uploaded images can be checked'}), {status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
     }
