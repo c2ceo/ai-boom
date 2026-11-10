@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check, Eye } from "lucide-react";
+import { Upload, Sparkles, ImageIcon, X, ShieldCheck, ShieldAlert, Loader2, Video, Coins, Zap, Wand2, Camera, Check, Eye, Laugh } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -27,7 +27,7 @@ const categories = [
 ];
 
 const Create = () => {
-  const [mode, setMode] = useState<"upload" | "generate" | "video">("generate");
+  const [mode, setMode] = useState<"upload" | "generate" | "video" | "joke">("generate");
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("ai-art");
   const [aiTool, setAiTool] = useState("");
@@ -462,7 +462,7 @@ const Create = () => {
     <div className="min-h-screen pb-28 pt-4 px-4 text-foreground">
       <h1 className="text-2xl font-bold mb-4 text-foreground">Create Post</h1>
 
-      <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate" | "video")}>
+      <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "generate" | "video" | "joke")}>
         <TabsList className="w-full mb-4">
           <TabsTrigger value="generate" className="flex-1 gap-2">
             <Sparkles className="h-4 w-4" /> AI Image
@@ -470,10 +470,17 @@ const Create = () => {
           <TabsTrigger value="video" disabled={isGuest} className="flex-1 gap-2">
             <Video className="h-4 w-4" /> AI Video
           </TabsTrigger>
+          <TabsTrigger value="joke" className="flex-1 gap-2">
+            <Laugh className="h-4 w-4" /> AI Joke
+          </TabsTrigger>
           <TabsTrigger value="upload" className="flex-1 gap-2">
             <Upload className="h-4 w-4" /> Upload
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="joke">
+          <JokeCreator onCaption={(j)=>{setCaption(j);setMode('generate');toast({title:'Caption added',description:'Create or upload an image to post it with.'});}}/>
+        </TabsContent>
 
         <TabsContent value="upload">
           <Card className="border-dashed border-2 border-border/50 bg-card/50 mb-4">
@@ -885,7 +892,6 @@ const Create = () => {
           )}
         </Button>
 
-        <JokeCreator onCaption={setCaption}/>
         {aiCheckResult && (
           <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${
             aiCheckResult.is_ai_generated && aiCheckResult.confidence >= 0.7
