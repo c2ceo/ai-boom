@@ -57,6 +57,13 @@
       "when": 1794274955464,
       "tag": "0007_private_posts_guest_pending_and_joke_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794275352515,
+      "tag": "0008_correct_guest_reservation_alias",
+      "breakpoints": true
     }
   ]
 }
