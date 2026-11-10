@@ -479,7 +479,7 @@ const Create = () => {
         </TabsList>
 
         <TabsContent value="joke">
-          <JokeCreator onCaption={(j)=>{setCaption(j);setMode('generate');toast({title:'Caption added',description:'Create or upload an image to post it with.'});}}/>
+          <JokeCreator/>
         </TabsContent>
 
         <TabsContent value="upload">
@@ -794,32 +794,9 @@ const Create = () => {
       </Tabs>
 
       {/* Shared fields */}
-      <div className="space-y-4">
+      <div className={mode==='joke' ? 'hidden' : 'space-y-4'}>
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Caption</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs gap-1.5 text-muted-foreground"
-              onClick={async () => {
-                try {
-                  const text = await navigator.clipboard.readText();
-                  if (text.trim()) {
-                    setCaption(text.trim());
-                    toast({ title: "Prompt pasted to caption ✨" });
-                  } else {
-                    toast({ title: "Clipboard is empty", variant: "destructive" });
-                  }
-                } catch {
-                  toast({ title: "Clipboard access denied", description: "Please allow clipboard access in your browser.", variant: "destructive" });
-                }
-              }}
-            >
-              📋 Paste prompt to caption
-            </Button>
-          </div>
+          <Label>Caption</Label>
           <Textarea
             placeholder="What's the story behind this creation?"
             value={caption}

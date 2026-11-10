@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb, ChevronDown } from "lucide-react";
+import { Heart, MessageCircle, Share2, Verified, MoreVertical, Trash2, Pencil, Archive, Eye, Zap, Loader2, Lightbulb, ChevronDown, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -238,8 +238,8 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
             )}
           </div>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted">
-            <span className="text-muted-foreground">No media</span>
+          <div className="flex aspect-square w-full items-center justify-center bg-muted p-8">
+            {post.caption ? <p className="text-center text-2xl font-semibold leading-snug text-foreground">{post.caption}</p> : <span className="text-muted-foreground">No media</span>}
           </div>
         )}
 
@@ -268,6 +268,29 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
         </div>
       </div>
 
+      <AnimatePresence>
+        {showPrompt && post.shared_prompt && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-background/60 p-4 backdrop-blur-sm sm:items-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowPrompt(false)}
+          >
+            <motion.div
+              role="dialog" aria-label="Prompt"
+              className="relative w-full max-w-lg rounded-3xl border border-primary/30 bg-card p-5 pb-6 shadow-2xl"
+              initial={{ y: 40, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 40, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button aria-label="Close prompt" onClick={() => setShowPrompt(false)} className="absolute right-3 top-3 rounded-full bg-muted p-1.5">
+                <X className="h-4 w-4" />
+              </button>
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary"><Lightbulb className="h-4 w-4" /> Prompt</p>
+              <p className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap pr-6 text-base leading-relaxed text-foreground">{post.shared_prompt}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Info section below the post */}
       <div className="max-w-lg mx-auto w-full px-4 py-3">
         <div className="flex items-center justify-between">
@@ -288,16 +311,18 @@ const FeedCard = ({ post, profile, isLiked = false, onLikeToggle, onComment, onD
               </button>
             </div>
             <div ref={textRef} className={textExpanded ? "" : "line-clamp-2"}>
-            {post.caption && (
+            {post.caption && (currentImageUrl || post.video_url) && (
                 <p className="text-sm text-muted-foreground ml-10">{post.caption}</p>
               )}
-              {post.shared_prompt && (
-                <div className={`ml-10 ${post.caption ? "mt-1" : ""} p-2 rounded-md bg-primary/5 border border-primary/20`}>
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-0.5">Prompt</p>
-                  <p className="text-xs text-foreground">{post.shared_prompt}</p>
-                </div>
-              )}
             </div>
+            {post.shared_prompt && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowPrompt(true); }}
+                className="ml-10 mt-1 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary"
+              >
+                <Lightbulb className="h-3 w-3" /> Prompt <ChevronDown className="h-3 w-3" />
+              </button>
+            )}
             {(textOverflows || textExpanded) && (
               <button
                 onClick={(e) => { e.stopPropagation(); setTextExpanded((v) => !v); }}
