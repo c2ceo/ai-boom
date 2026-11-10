@@ -33,8 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const {error}=await supabase.rpc('confirm_visitor_age',{p_birthday:birthday});
       if(!error) sessionStorage.removeItem('aiboom_pending_birthday');
     }
-    const {data}=await supabase.from('visitor_admissions').select('is_guest').eq('user_id',current.id).maybeSingle();
-    setAdmitted(Boolean(data));setIsGuest(data?.is_guest === true);
+    const {data}=await supabase.from('visitor_admissions').select('is_guest,signed_out_at').eq('user_id',current.id).maybeSingle();
+    setAdmitted(Boolean(data) && !data?.signed_out_at);setIsGuest(data?.is_guest === true);
   };
 
   useEffect(() => {
@@ -78,7 +78,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { data: { user: current }, error: identityError } = await supabase.auth.getUser();
+    if (current) {
+      const { data: admission, error: admissionError } = await supabase.from('visitor_admissions').select('is_guest').eq('user_id', current.id).maybeSingle();
+      if (admissionError) throw admissionError;
+      if (admission?.is_guest) {
+        const { data, error } = await supabase.functions.invoke('guest-exit', { body: {} });
+        if (error || !data?.success) throw new Error(data?.error || 'Unable to sign out. Please try again.');
+      }
+    } else if (identityError && isGuest) {
+      throw new Error('Unable to confirm guest sign-out. Please try again.');
+    }
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) throw error;
   };
 

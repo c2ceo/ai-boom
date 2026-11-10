@@ -1,4 +1,5 @@
 # Architecture
+- Guest sign-out copies published media to platform-owned storage and atomically transfers posts before deleting the guest identity; a service-role-only registry identifies a banned platform account, and failed transfers must preserve the guest identity.
 - Private posts store opaque owner-only media paths and resolve signed URLs on viewing; RLS and visibility helpers restrict post rows to the owner.
 - Guest image reservations refuse further requests until the completed image has a matching published post; pending media restores through an owner-scoped RPC.
 - Joke generation reserves a conservative token-cost quote atomically, settles returned usage once, and uses the existing credit balance after the shared cost budget.

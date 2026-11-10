@@ -75,7 +75,7 @@ export default function Welcome() {
        </Button>
       </motion.div>
      </div>
-     <p className="text-xs leading-relaxed text-welcome-muted">By entering, you agree to our <a href="/terms" className="underline">Terms</a> and <a href="/privacy-policy" className="underline">Privacy Policy</a>. Guest access stays on this browser; save an account to keep access.</p>
+     <p className="text-xs leading-relaxed text-welcome-muted">By entering, you agree to our <a href="/terms" className="underline">Terms</a> and <a href="/privacy-policy" className="underline">Privacy Policy</a>. Signing out deletes your guest account; published posts remain on the app and become AI-Boom’s property.</p>
     </div>
    </div>
   </section>
