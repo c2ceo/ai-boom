@@ -43,6 +43,13 @@
       "when": 1794260884125,
       "tag": "0005_image_model_promotion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794273594308,
+      "tag": "0006_guest_admission_and_safe_media",
+      "breakpoints": true
     }
   ]
 }

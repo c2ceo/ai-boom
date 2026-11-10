@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,33 +19,6 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Auto-login via edge function — skip in Lovable preview (auth is already bypassed)
-  useEffect(() => {
-    const isPreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
-    if (isPreview) return;
-
-    const autoLogin = async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dev-autologin`,
-          {
-            headers: {
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-          }
-        );
-        const { session, error } = await res.json();
-        if (session && !error) {
-          await supabase.auth.setSession(session);
-          navigate("/");
-        }
-      } catch (_) {
-        // silently fail — fall back to manual login
-      }
-    };
-    autoLogin();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,8 +145,8 @@ const Auth = () => {
             </button>
           </div>
           <div className="mt-4">
-            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
-              Browse without an account
+            <Button variant="outline" className="w-full" onClick={() => navigate("/welcome")}>
+              Sign in as guest
             </Button>
           </div>
           <div className="mt-4 text-center text-xs text-muted-foreground">

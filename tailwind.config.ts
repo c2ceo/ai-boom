@@ -14,6 +14,9 @@ export default {
     },
     extend: {
       colors: {
+        'welcome-muted': 'hsl(var(--welcome-muted))',
+        'welcome-mint': 'hsl(var(--welcome-mint))',
+        'welcome-spark': 'hsl(var(--welcome-spark))',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

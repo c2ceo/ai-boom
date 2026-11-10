@@ -72,7 +72,7 @@ const Create = () => {
   const insufficientImageCredits = imageCost > 0 && (falCredits === null || falCredits < imageCost);
   const [buyingCredits, setBuyingCredits] = useState(false);
 
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -312,6 +312,7 @@ const Create = () => {
     try {
       let uploadedUrl = mode === "video" ? generatedVideo : generatedImage;
       const isVideo = mode === "video" || file?.type?.startsWith("video/");
+      if(isGuest && isVideo) throw new Error('Guest uploads currently support photos only, so every upload can be safety checked.');
 
       if (mode === "upload" && file) {
         if (editedPreview) {
@@ -350,6 +351,10 @@ const Create = () => {
       }
 
       const isFamilyFriendly = filterResult ? filterResult.is_family_friendly !== false : true;
+      if(isGuest && mode==='upload' && !photoEdited && filterResult?.is_family_friendly !== true) {
+        if(uploadedUrl){const path=uploadedUrl.split('/media/')[1];if(path) await supabase.storage.from('media').remove([path]);}
+        throw new Error('Your photo could not pass the safety check. Please try another photo.');
+      }
 
       if (!isFamilyFriendly) {
         // Delete the uploaded file since we're rejecting the post
@@ -402,10 +407,6 @@ const Create = () => {
         tags,
         category,
         ai_tool: mode === "generate" ? "fal.ai" : mode === "video" ? "fal.ai" : aiTool,
-        is_verified_ai: verifiedAi,
-        is_family_friendly: isFamilyFriendly,
-        status: needsReview ? "pending_review" : "approved",
-        voting_expires_at: needsReview ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null,
         allow_evolve: allowEvolve,
         shared_prompt: promptToShare,
       } as any);
@@ -437,7 +438,7 @@ const Create = () => {
           <TabsTrigger value="generate" className="flex-1 gap-2">
             <Sparkles className="h-4 w-4" /> AI Image
           </TabsTrigger>
-          <TabsTrigger value="video" className="flex-1 gap-2">
+          <TabsTrigger value="video" disabled={isGuest} className="flex-1 gap-2">
             <Video className="h-4 w-4" /> AI Video
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex-1 gap-2">
@@ -468,7 +469,7 @@ const Create = () => {
                     </button>
                   </div>
                    {/* Optional AI Edit section for images */}
-                  {!file?.type?.startsWith("video/") && sourceBase64 && (
+                  {!isGuest && !file?.type?.startsWith("video/") && sourceBase64 && (
                     <div className="space-y-2 border border-border/50 rounded-lg p-3 bg-muted/30">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Wand2 className="h-3 w-3 text-primary" />
@@ -565,8 +566,8 @@ const Create = () => {
                   <SelectTrigger id="image-model"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="schnell">FLUX Schnell · {freeReserved === null ? "Checking price…" : freeReserved < SCHNELL_FREE_LIMIT ? "Free" : "1 credit"}</SelectItem>
-                    <SelectItem value="dev">FLUX Dev · 5 credits ($0.10)</SelectItem>
-                    <SelectItem value="pro">FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
+                    <SelectItem value="dev" disabled={isGuest}>FLUX Dev · 5 credits ($0.10)</SelectItem>
+                    <SelectItem value="pro" disabled={isGuest}>FLUX 1.1 Pro · 8 credits ($0.16)</SelectItem>
                   </SelectContent>
                 </Select>
                 {imageModel === "schnell" && freeReserved !== null && freeReserved < SCHNELL_FREE_LIMIT && (

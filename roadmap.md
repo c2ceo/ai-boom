@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Add age-checked welcome page, required guest/account entry, random guest handles, and safe guest Schnell creation/uploads
 - [x] Add Schnell/Dev/Pro image options, shared million-image Schnell promotion, and prompt enhancement; verify pricing and generation.
 - [x] Check SSL for AI-BOOM and all connected domains/pages; resolve any setup issues
 - [x] Replace Buy Credits with a Stripe page selling 50 credits for $1 and securely fulfill the generation balance

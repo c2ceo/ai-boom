@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import BottomNav from "@/components/BottomNav";
 import ThemeToggle from "@/components/ThemeToggle";
-import DevToggle from "@/components/DevToggle";
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
 import Create from "./pages/Create";
@@ -27,16 +26,14 @@ import Conversation from "./pages/Conversation";
 import Subscribe from "./pages/Subscribe";
 import PhotoEditor from "./pages/PhotoEditor";
 import NotFound from "./pages/NotFound";
+import Welcome from "./pages/Welcome";
+import { useLocation } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
 const queryClient = new QueryClient();
 
-const isLovablePreview = window.location.hostname.includes('lovable.app') || window.location.hostname.includes('lovableproject.com') || window.location.hostname === 'localhost';
-
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  // Bypass auth in Lovable preview
-  if (isLovablePreview) return <>{children}</>;
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -55,14 +52,14 @@ const AppLayout = ({ children, hideThemeToggle }: { children: React.ReactNode; h
         <ThemeToggle />
       </div>
     )}
-    <DevToggle />
     {children}
     <BottomNav />
   </div>
 );
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, admitted, isGuest } = useAuth();
+  const location=useLocation();
 
   if (loading) {
     return (
@@ -72,11 +69,15 @@ const AppRoutes = () => {
     );
   }
 
+  const publicEntry=['/welcome','/auth','/reset-password','/terms','/privacy-policy'];
+  if(!publicEntry.includes(location.pathname) && (!user || !admitted)) return <Navigate to="/welcome" replace />;
   return (
     <Routes>
-      <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+      <Route path="/welcome" element={user && admitted ? <Navigate to="/" replace /> : <Welcome />} />
+      <Route path="/auth" element={user && !isGuest ? <Navigate to={admitted ? '/' : '/welcome'} replace /> : <Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<AppLayout><Home /></AppLayout>} />
+      <Route path="/index" element={<Navigate to="/" replace />} />
       <Route path="/explore" element={<AppLayout><Explore /></AppLayout>} />
       <Route path="/create" element={<ProtectedRoute><AppLayout><Create /></AppLayout></ProtectedRoute>} />
       <Route path="/vote" element={<AppLayout><CommunityVote /></AppLayout>} />
