@@ -33,8 +33,12 @@ serve(async (req) => {
       });
     }
 
-    const ownPrefix = `${backendUrl}/storage/v1/object/public/media/${userId}/`;
-    if (typeof imageUrl !== 'string' || !imageUrl.startsWith(ownPrefix) || imageUrl.includes('/../')) {
+    const ownPath = `/storage/v1/object/public/media/${userId}/`;
+    const parsedUrl = typeof imageUrl === 'string' ? new URL(imageUrl) : null;
+    const publicHost = new URL(backendUrl).hostname;
+    // Cloud public URLs can use a different gateway host from the internal service URL.
+    const trustedHost = parsedUrl && (parsedUrl.hostname === publicHost || parsedUrl.hostname === `${Deno.env.get('SUPABASE_PROJECT_ID') ?? publicHost.split('.')[0]}.supabase.co`);
+    if (!parsedUrl || !trustedHost || parsedUrl.protocol !== 'https:' || !parsedUrl.pathname.startsWith(ownPath) || imageUrl.includes('/../')) {
       return new Response(JSON.stringify({error:'Only your own uploaded images can be checked'}), {status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
     }
 
@@ -58,7 +62,7 @@ serve(async (req) => {
       }
       const ownPrefix = `/storage/v1/object/public/media/${userId}/`;
       if (result?.is_ai_generated && Number(result.confidence) >= 0.7 && result.is_family_friendly !== false
-          && typeof imageUrl === "string" && imageUrl.startsWith(backendUrl + ownPrefix)) {
+          && typeof imageUrl === "string" && parsedUrl?.pathname.startsWith(ownPrefix)) {
         await admin.from("verified_media").upsert({ media_url: imageUrl, user_id: userId });
       }
     };
