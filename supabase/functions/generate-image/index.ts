@@ -5,7 +5,7 @@ import { generateResponse, GatewayError } from "npm:@lovable.dev/ai-gateway@0.1.
 import type {} from "../_shared/ai-gateway/models.d.ts";
 import { IMAGE_MODELS } from "../_shared/image-models.ts";
 import { guestModelAllowed } from "../_shared/visitor.ts";
-const schema = z.object({ action: z.enum(["generate","enhance"]).default("generate"), prompt: z.string().trim().min(1).max(4000), model: z.enum(["schnell","dev","pro"]).default("dev"), request_id: z.string().uuid(), max_credits: z.number().int().min(0).max(8) });
+const schema = z.object({ action: z.enum(["generate","enhance"]).default("generate"), prompt: z.string().trim().min(1).max(4000), model: z.enum(["schnell","dev","pro"]).default("dev"), request_id: z.string().uuid(), max_credits: z.number().int().min(0).max(11) });
 const explicit = /\b(nude|naked|nsfw|porn|xxx|hentai|erotic|sexual|genitalia|explicit|uncensored|topless|bottomless|intercourse|orgasm|masturbat|fetish|bondage|bdsm)\b/i;
 const reply = (body: object, status=200) => new Response(JSON.stringify(body), {status, headers:{...corsHeaders,"Content-Type":"application/json"}});
 Deno.serve(async (req) => {

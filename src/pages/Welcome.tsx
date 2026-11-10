@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Flame, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import BirthdayWheel from '@/components/BirthdayWheel';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +62,7 @@ export default function Welcome() {
       <Button variant="outline" className={entry==='account' ? 'welcome-choice selected' : 'welcome-choice'} onClick={()=>setEntry('account')} aria-pressed={entry==='account'}>Use an account</Button>
      </div>}
      <div className="space-y-2"><Label htmlFor="birthday" className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-welcome-mint" /> Your birthday</Label>
-      <Input id="birthday" type="date" min="1900-01-01" max={new Date().toISOString().slice(0,10)} value={birthday} onChange={e=>{setBirthday(e.target.value);setError('');}} className="welcome-birthday" />
+      <BirthdayWheel onChange={setBirthday}/>
       <p className="text-xs text-welcome-muted">You must be 13 or older. Your birthday is not saved.</p>
      </div>
      {error && <p role="alert" className="text-sm text-welcome-spark">{error}</p>}
