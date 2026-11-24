@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Prepare the first ad campaign — awaiting goal, audience, market, budget and creative approvals; do not spend without approval.
+- [ ] Research and recommend ways to bring visitors to AI-Boom; save evidence and ranked actions.
 - [ ] Refine horizontal welcome dynamite from the reference, make post media full-width, and move the media selector clear of actions; verify phone and desktop.
 - [x] Preserve guest published content under AI-Boom and delete guest accounts on sign-out; disclosed and verified with a generated joke and photo.
 - [x] Add image quality tiers and fee-aware 3.2× pricing
